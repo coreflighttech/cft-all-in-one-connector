@@ -1,0 +1,160 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWPF>true</UseWPF>
+		<Platforms>AnyCPU;x86</Platforms>
+		<RootNamespace>MobiFlight</RootNamespace>
+		<ProductName>CFTAllInOneConnectorEngine</ProductName>
+		<AssemblyName>CFTAllInOneConnectorEngine</AssemblyName>
+		<OutputType>WinExe</OutputType>
+		<SelfContained>true</SelfContained>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<AssemblyTitle>CFT All-in-One Connector Engine</AssemblyTitle>
+		<Description>MobiFlight-based connection engine for Core Flight Tech flight simulation products</Description>
+		<Product>CFT All-in-One Connector</Product>
+		<Copyright>Copyright Sebastian Moebius 2014 - 2026</Copyright>
+		<Company>Core Flight Tech</Company>
+		<ApplicationIcon>mobiflight.ico</ApplicationIcon>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
+		<DefineConstants>TRACE;MOBIFLIGHT;DEBUG;SIMCONNECT;ARCAZE</DefineConstants>
+		<DocumentationFile>bin\Debug\MFConnector.xml</DocumentationFile>
+		<WarningLevel>2</WarningLevel>
+		<CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+		<CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+		<NoWarn>$(NoWarn);WFO1000</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release'">
+		<DefineConstants>TRACE;CODE_ANALYSIS;MOBIFLIGHT;RELEASE;SIMCONNECT;ARCAZE</DefineConstants>
+		<WarningLevel>2</WarningLevel>
+		<UseVSHostingProcess>false</UseVSHostingProcess>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+		<CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+		<NoWarn>$(NoWarn);WFO1000</NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+		<Content Include="mobiflight.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="FSUIPCClientDLL" />
+		<PackageReference Include="GraphQL.Client" />
+		<PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" />
+		<PackageReference Include="GraphQL.Primitives" />
+		<PackageReference Include="HidSharp" />
+		<PackageReference Include="Microsoft.ApplicationInsights" />
+		<PackageReference Include="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+		<PackageReference Include="Microsoft.Web.WebView2" />
+		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="Newtonsoft.Json.Schema" />
+		<PackageReference Include="SharpDX" />
+		<PackageReference Include="SharpDX.DirectInput" />
+		<PackageReference Include="System.Management" />
+		<PackageReference Include="websocket-sharp.net" />
+		<PackageReference Include="XPlaneConnector" />
+		<PackageReference Include="System.IO.Ports" />
+		<PackageReference Include="System.Net.WebSockets.Client.Managed" />
+		<PackageReference Include="System.Reactive" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CommandMessenger.Transport.Serial\CommandMessenger.Transport.Serial.csproj" />
+		<ProjectReference Include="..\CommandMessenger\CommandMessenger.csproj" />
+		<ProjectReference Include="..\MobiFlightWwFcu\MobiFlightWwFcu.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="ArcazeHid, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+			<HintPath>..\..\lib\ArcazeHid.dll</HintPath>
+		</Reference>
+		<Reference Include="Microsoft.FlightSimulator.SimConnect, Version=10.0.61259.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=x86">
+			<HintPath>SimConnectFSX\Microsoft.FlightSimulator.SimConnect.dll</HintPath>
+		</Reference>
+		<Reference Include="Midi">
+			<HintPath>..\..\lib\Midi.dll</HintPath>
+		</Reference>
+		<Reference Include="NCalc">
+			<HintPath>..\..\lib\NCalc.dll</HintPath>
+		</Reference>
+		<Reference Include="vJoyInterfaceWrap">
+			<HintPath>..\..\lib\vJoyInterfaceWrap.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Boards\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Community\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Devices\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="examples\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="firmware\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Joysticks\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="MidiBoards\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Presets\**">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Scripts\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="frontend\dist\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="MSFS2020-module\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Arduino\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<Content Include="..\..\Python\*.zip">
+			<Link>Python\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="..\..\lib\vJoyInterface.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="..\..\lib\x86\SimConnect.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>MobiFlightUnitTests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+</Project>

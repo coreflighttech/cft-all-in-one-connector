@@ -1,0 +1,162 @@
+[
+  {
+    "Name": "ProtoBoard-v2",
+    "Serial": "SN-5FC-1CF",
+    "Vendor": "MobiFlight",
+    "ProductId": "",
+    "VendorId": "",
+    "Type": "MobiFlight",
+    "Connected": true,
+    "ImageUrl": null,
+    "certified": false,
+    "Devices": [
+      {
+        "Name": "1",
+        "Label": "Button 1",
+        "Type": "Button"
+      }
+    ]
+  },
+  {
+    "Name": "Alpha Flight Controls Lite",
+    "Serial": "JS-c0875190-3b89-11ed-8007-444553540000",
+    "Vendor": "Honeycomb",
+    "ProductId": "",
+    "VendorId": "",
+    "Type": "Joystick",
+    "Connected": true,
+    "ImageUrl": null,
+    "certified": false,
+    "Devices": [
+      {
+        "Name": "1",
+        "Label": "Button 1",
+        "Type": "Button"
+      }
+    ]
+  },
+  {
+    "Name": "Bravo Throttle Quadrant",
+    "Serial": "JS-87654321",
+    "Vendor": "Honeycomb",
+    "ProductId": "",
+    "VendorId": "",
+    "Type": "Joystick",
+    "Connected": true,
+    "ImageUrl": null,
+    "certified": false,
+    "Devices": [
+      {
+        "Name": "1",
+        "Label": "Button 1",
+        "Type": "Button"
+      },
+      {
+        "Name": "Button 21",
+        "Label": "Mode - ALT",
+        "Type": "Button"
+      },
+      {
+        "Name": "12",
+        "Label": "Button 12",
+        "Type": "Button"
+      },
+      {
+        "Name": "2",
+        "Label": "Button 2",
+        "Type": "Button"
+      },
+      {
+        "Name": "11",
+        "Label": "Button 11",
+        "Type": "Button"
+      },
+      {
+        "Label": "AP Mode - HDG",
+        "Id": "AP.hdg",
+        "Byte": 1,
+        "Bit": 0,
+        "Type": "Output"
+      },
+      {
+        "Label": "AP Display - HDG",
+        "Id": "AP.display.hdg",
+        "Byte": 1,
+        "Bit": 1,
+        "Type": "LcdDisplay"
+      }
+    ]
+  },
+  {
+    "Name": "Throttle B",
+    "Serial": "67890",
+    "Vendor": "Korg",
+    "ProductId": "",
+    "VendorId": "",
+    "Type": "Midi",
+    "Connected": true,
+    "ImageUrl": null,
+    "certified": false,
+    "Devices": [
+      {
+        "Name": "1",
+        "Label": "Button 1",
+        "Type": "Button"
+      }
+    ]
+  },
+  {
+    "Name": "miniCOCKPIT miniFCU",
+    "Serial": "SN-E98-277",
+    "Vendor": "miniCockpit",
+    "ProductId": "",
+    "VendorId": "",
+    "Type": "Joystick",
+    "Connected": true,
+    "ImageUrl": null,
+    "certified": false,
+    "Devices": [
+      {
+        "Name": "1",
+        "Label": "Button 1",
+        "Type": "Button"
+      }
+    ]
+  },
+  {
+    "Name": "MFG Crosswind V2/3",
+    "Serial": "JS-b0875190-3b89-11ed-8007-444553540003",
+    "Vendor": "Microsoft",
+    "ProductId": "",
+    "VendorId": "",
+    "Type": "Joystick",
+    "Connected": true,
+    "ImageUrl": null,
+    "certified": false,
+    "Devices": [
+      {
+        "Name": "1",
+        "Label": "Button 1",
+        "Type": "Button"
+      }
+    ]
+  },
+  {
+    "Name": "Octavi",
+    "Serial": "JS-b0875190-3b89-11ed-8007-44455354004",
+    "Vendor": "Octavi",
+    "ProductId": "",
+    "VendorId": "",
+    "Type": "Joystick",
+    "Connected": true,
+    "ImageUrl": null,
+    "certified": false,
+    "Devices": [
+      {
+        "Name": "1",
+        "Label": "Button 1",
+        "Type": "Button"
+      }
+    ]
+  }
+]

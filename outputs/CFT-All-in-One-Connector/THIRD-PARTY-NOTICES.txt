@@ -1,0 +1,12 @@
+THIRD-PARTY NOTICES
+===================
+
+MobiFlight Connector
+--------------------
+This product contains modified software based on MobiFlight Connector.
+MobiFlight Connector is provided under the MIT License.
+
+Copyright (c) 2016-2022 MobiFlight, Sebastian Moebius
+
+The complete license text is included in LICENSE-MobiFlight.txt.
+

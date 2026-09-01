@@ -1,0 +1,41 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release-notes
+      - dependencies
+  categories:
+    - title: New Feature 🎉
+      labels:
+        - feature
+    - title: New Hardware Support 🕹️
+      labels:
+        - controller
+        - hardware
+    - title: Profile Updates 🚀
+      labels:
+        - profile
+    - title: Firmware Updates ⚙️
+      labels:
+        - firmware
+    - title: New UI Language 🌍  
+      labels:
+        - i18n
+    - title: Improvement ✨
+      labels:
+        - enhancement
+    - title: Bug Fixes 🐛
+      labels:
+        - bug
+    - title: Bug Fixes (BETA) 🐛
+      labels:
+        - bug_beta
+    - title: Documentation 📚
+      labels:
+        - documentation
+    - title: Development 💻
+      labels:
+        - development
+        - code-cleanup
+    - title: Other Changes ⚡
+      labels:
+        - "*"

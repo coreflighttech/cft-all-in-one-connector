@@ -1,0 +1,23 @@
+name: Add PR Artifact Links As Comment
+on:
+  workflow_run:
+    workflows: [CI Pipeline]
+    types: [completed]
+
+jobs:
+  artifacts-url-comments:
+    name: Add artifact links to pull request
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }} &&
+      github.event.workflow_run.event == 'pull_request'
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 14
+      - uses: tonyhallett/artifacts-url-comments@v1.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          prefix: "Build for this pull request:"
+          format: "[MobiFlightConnector.zip]({url})"
+          addTo: pull

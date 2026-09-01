@@ -1,0 +1,105 @@
+﻿using MobiFlight.Base;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+
+namespace MobiFlight.Base.Tests
+{
+    [TestClass()]
+    public class ExtensionsTests
+    {
+        [TestMethod()]
+        public void ReverseTest()
+        {
+            byte value = 1;
+            Assert.AreEqual(128, value.Reverse(), $"The value was not reversed properly.");
+
+            value = 128;
+            Assert.AreEqual(1, value.Reverse(), $"The value was not reversed properly.");
+
+            value = 0b11110000;
+            Assert.AreEqual(0b00001111, value.Reverse(), $"The value was not reversed properly.");
+
+            value = 0b10110111;
+            Assert.AreEqual(0b11101101, value.Reverse(), $"The value was not reversed properly.");
+        }
+
+        [TestMethod()]
+        public void GenerateSimpleHashTest()
+        {
+            string xTouch = "X-TOUCH MINI";
+            int xTouchHash = xTouch.GenerateSimpleHash();
+            Assert.AreEqual(954907131, xTouchHash, "Failed to generate correct hash from string.");
+
+            string empty = "";
+            int emptyHash = empty.GenerateSimpleHash();
+            Assert.AreEqual(0, emptyHash, "Failed to generate correct hash from string.");
+
+            string shortString = "a";
+            int shortStringHash = shortString.GenerateSimpleHash();
+            Assert.AreEqual(97, shortStringHash, "Failed to generate correct hash from string.");
+
+            string longString = "This is a rather long string to hash. Let's do some magic. The result will be fantastic.";
+            int longStringHash = longString.GenerateSimpleHash();
+            Assert.AreEqual(1057832466, longStringHash, "Failed to generate correct hash from string.");
+
+            string japanese = "日本にほんでは";
+            int japaneseHash = japanese.GenerateSimpleHash();
+            Assert.AreEqual(1550985689, japaneseHash, "Failed to generate correct hash from string.");
+
+            string german = "Müßiggang";
+            int germanHash = german.GenerateSimpleHash();
+            Assert.AreEqual(1480680476, germanHash, "Failed to generate correct hash from string.");
+
+            string fail = "My fail";
+            int failHash = fail.GenerateSimpleHash();
+            Assert.AreNotEqual(0, failHash, "Hash of 0 should not be the result.");
+        }
+
+        [TestMethod()]
+        public void AreEqualTest()
+        {
+            string s1 = null;
+            string s2 = null;
+            Assert.IsTrue(s1.AreEqual(s2));
+
+            s1 = "Hello";
+            Assert.IsFalse(s1.AreEqual(s2));
+            s2 = "World!";
+            Assert.IsFalse(s1.AreEqual(s2));
+            s2 = "Hello";
+            Assert.IsTrue(s1.AreEqual(s2));
+        }
+
+        [TestMethod()]
+        public void IsValidUrlTest()
+        {
+            var link1 = "https://www.mobiflight.com";
+            Assert.IsTrue(link1.IsValidUrl(), "The URL should be valid.");
+
+            var link2 = "invalid-url";
+            Assert.IsFalse(link2.IsValidUrl(), "The URL should be invalid.");
+
+            var link3 = "ftp://example.com";
+            Assert.IsFalse(link3.IsValidUrl(), "The URL should be invalid.");
+
+            var link4 = "http://localhost";
+            Assert.IsTrue(link4.IsValidUrl(), "The URL should be valid.");
+        }
+
+        [TestMethod()]
+        public void IsValidEmailLinkTest()
+        {
+            var link1 = @"mailto:test@example.com";
+            Assert.IsTrue(link1.IsValidEmailLink(), "The email link should be valid.");
+
+            var link2 = @"mailto:invalid-email";
+            Assert.IsFalse(link2.IsValidEmailLink(), "The email link should be invalid.");
+
+            var link3 = @"mailto:example.com";
+            Assert.IsFalse(link3.IsValidEmailLink(), "The email link should be invalid.");
+
+            var link4 = @"mailto:user@";
+            Assert.IsFalse(link4.IsValidEmailLink(), "The email link should be invalid.");
+        }
+    }
+}

@@ -1,0 +1,59 @@
+import {
+  IconBrandDiscordFilled,
+  IconBrandYoutubeFilled,
+  IconHeartDollar,
+} from "@tabler/icons-react"
+import messageExchange from "@/lib/messageExchange"
+import { Button } from "./ui/button"
+import IconBrandHubHopLogo from "./icons/IconBrandHubHopLogo"
+import { CommandMainMenuPayload } from "@/types/commands"
+import { useUserProfileStore } from "@/stores/userProfileStore"
+
+export const CommunityMenu = () => {
+  const { userProfile } = useUserProfileStore()
+  const { publish } = messageExchange
+  const handleMenuItemClick = (payload: CommandMainMenuPayload) => {
+    publish({
+      key: "CommandMainMenu",
+      payload: payload,
+    })
+  }
+  return (
+    <div className="flex flex-row items-center gap-1 py-2 text-sm">
+      {userProfile?.membership !== "member" && (
+        <Button
+          className="group h-8 gap-1 rounded-full bg-pink-600 py-1 pr-4 pl-3 text-white hover:bg-pink-400 dark:bg-pink-900 dark:hover:bg-pink-600 [&_svg]:size-5"
+          variant={"default"}
+          onClick={() => handleMenuItemClick({ action: "help.donate" })}
+        >
+          <IconHeartDollar className="fill-none stroke-white text-white transition-colors group-hover:stroke-white" />
+          Support us
+        </Button>
+      )}
+      <Button
+        className="h-8 gap-1 rounded-full px-4 py-1 [&_svg]:size-6"
+        variant={"ghost"}
+        onClick={() => handleMenuItemClick({ action: "help.discord" })}
+      >
+        <IconBrandDiscordFilled className="fill-indigo-800 stroke-indigo-800" />
+        Discord
+      </Button>
+      <Button
+        className="h-8 gap-1 rounded-full px-4 py-1 [&_svg]:size-6"
+        variant={"ghost"}
+        onClick={() => handleMenuItemClick({ action: "help.youtube" })}
+      >
+        <IconBrandYoutubeFilled className="fill-red-700 stroke-red-700" />
+        YouTube
+      </Button>
+      <Button
+        className="h-8 gap-1 rounded-full px-4 py-1 [&_svg]:size-6"
+        variant={"ghost"}
+        onClick={() => handleMenuItemClick({ action: "help.hubhop" })}
+      >
+        <IconBrandHubHopLogo className="fill-orange-400 stroke-orange-400" />
+        HubHop
+      </Button>
+    </div>
+  )
+}

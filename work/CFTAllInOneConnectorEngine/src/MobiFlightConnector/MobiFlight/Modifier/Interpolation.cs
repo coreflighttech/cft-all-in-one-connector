@@ -1,0 +1,232 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Xml;
+
+namespace MobiFlight.Modifier
+{
+    public class Interpolation : ModifierBase
+    {
+        private System.Globalization.CultureInfo serializationCulture = new System.Globalization.CultureInfo("en");
+
+        public SortedDictionary<double, double> Values { get; set; } = new SortedDictionary<double, double>();
+        public int Count { get { return Values.Count; } }
+
+        [JsonIgnore]
+        public double Max { get { return max; } }
+        [JsonIgnore]
+        public double Min { get { return min; } }
+        
+        protected double max = double.MinValue;
+        protected double min = double.MaxValue;
+
+        public Interpolation()
+        {
+            Active = false;
+        }
+        
+        public void Add (double x, double y)
+        {
+            if (Values.ContainsKey(x))
+                throw new XvalueAlreadyExistsException();
+            if (y > Max) max = y;
+            if (y < Min) min = y;
+
+            Values.Add(x, y); 
+        }
+
+        // on json deserialization
+        [OnDeserialized]
+        public void OnDeserialized(StreamingContext context)
+        {
+            if (Values.Count > 0)
+            {
+                max = Values.Values.Max();
+                min = Values.Values.Min();
+            }
+        }
+
+        public SortedDictionary<double, double> GetValues()
+        {
+            return Values;
+        }
+
+        public void Clear()
+        {
+            Values.Clear();
+        }
+
+        override public object Clone()
+        {
+            Interpolation Clone = new Interpolation();
+            // clone the get/set properties
+            Clone.Active = Active;
+
+            // clone the Vlaues
+            foreach (double Key in Values.Keys)
+            {
+                Clone.Add(Key, Values[Key]);
+            }
+            return Clone;
+        }
+
+        override public void ReadXml(XmlReader reader)
+        {
+            bool atPosition = false;
+            if (reader["active"] != null && reader["active"] != "")
+            {
+                Active = Boolean.Parse(reader["active"]);
+            }
+            // read precondition settings if present
+            if (reader.ReadToDescendant("value"))
+            {
+                Values.Clear();
+                // load a list
+                do
+                {
+                    Values.Add(double.Parse(reader["x"], serializationCulture), 
+                               double.Parse(reader["y"], serializationCulture));
+                    reader.ReadToNextSibling("value");
+                } while (reader.LocalName == "value");
+            }
+        }
+
+        public override ConnectorValue Apply(ConnectorValue connectorValue, List<ConfigRefValue> configRefs)
+        {
+            if (!Active) return connectorValue;
+
+            ConnectorValue result = connectorValue.Clone() as ConnectorValue;
+
+            if (Count == 0) return result;
+
+            switch (connectorValue.type)
+            {
+                case FSUIPCOffsetType.Float:
+                case FSUIPCOffsetType.Integer:
+                    result.Float64 = CalculateInterpolatedValue(connectorValue.Float64);
+                    break;
+
+                case FSUIPCOffsetType.String:
+                    // we can't apply interpolation to a string
+                    break;
+            } 
+                
+            return result;
+        }
+
+        public string Apply(string strValue)
+        {
+            string result = strValue;
+
+            if (Count > 0 && float.TryParse(strValue, out float value))
+            {
+                result = CalculateInterpolatedValue(value).ToString();
+            }
+
+            return result;
+        }
+
+        public double CalculateInterpolatedValue(double x)
+        {
+            double first = Values.Keys.First();
+            if (x <= first) return Values[first];
+
+            double second = Values.Keys.Last();
+            if (x >= second) return Values[second];
+
+            if (Values.Count > 2)
+            {
+                for (int i = 1; i != Values.Count; ++i)
+                {
+                    double currentKey = Values.ElementAt(i).Key;
+                    if (currentKey <= x && currentKey > first)
+                    {
+                        if (currentKey == x) return Values.ElementAt(i).Value;
+                        first = currentKey;
+                        continue;
+                    }
+
+                    if (currentKey >= x && currentKey < second)
+                    {
+                        second = currentKey;
+                        if (currentKey == x) return Values.ElementAt(i).Value;
+                        break;
+                    }
+                }
+            }
+
+            return interpolate(x, first, Values[first], second, Values[second]);
+        }
+
+        override public void WriteXml(XmlWriter writer)
+        {
+            if (Count == 0) return;
+            
+            writer.WriteStartElement("interpolation");
+
+            writer.WriteAttributeString("active", Active.ToString());
+            foreach (double x in Values.Keys)
+            {
+                writer.WriteStartElement("value");
+                writer.WriteAttributeString("x", x.ToString(serializationCulture));
+                writer.WriteAttributeString("y", Values[x].ToString(serializationCulture));
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
+        }
+
+        protected double interpolate(double value, double x1, double y1, double x2, double y2)
+        {
+            if (x1 == x2) return y1;
+            // this can not throw a division by zero exception
+            return y1 + ((y2 - y1) / (x2 - x1)) * (value - x1);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || !(obj is Interpolation)) return false;
+
+            var interpolation = (obj as Interpolation);
+            
+            return
+                // Max == interpolation.Max &&
+                // Min == interpolation.Min &&
+                Count == interpolation.Count &&
+                Active == interpolation.Active &&
+                Values.Keys.SequenceEqual(interpolation.Values.Keys) &&
+                Values.Values.SequenceEqual(interpolation.Values.Values);
+        }
+        public override string ToSummaryLabel()
+        {
+            return $"Interpolation: {Values.Count} values with Min {Min} and Max {Max}";
+        }
+
+        public Tuple<double, double> NextItem()
+        {
+            var secondLastKey = Values.Keys.ElementAt(Values.Keys.Count - 2);
+            var lastKey = Values.Keys.ElementAt(Values.Keys.Count - 1);
+            var secondLastValue = Values[secondLastKey];
+            var lastValue = Values[lastKey];
+
+            return new Tuple<double, double>(lastKey-secondLastKey+lastKey, lastValue-secondLastValue+lastValue);
+        }
+    }
+
+    [Serializable]
+    public class XvalueAlreadyExistsException : Exception
+    {
+        public XvalueAlreadyExistsException()
+        {
+        }
+
+        public XvalueAlreadyExistsException(string message) : base(message)
+        {
+        }
+
+        public XvalueAlreadyExistsException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
+}

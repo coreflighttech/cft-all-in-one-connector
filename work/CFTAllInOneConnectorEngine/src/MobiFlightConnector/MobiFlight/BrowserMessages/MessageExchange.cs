@@ -1,0 +1,175 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace MobiFlight.BrowserMessages
+{
+    // Implement as singleton   
+    public class MessageExchange : IMessageExchange
+    {
+        private readonly Dictionary<Type, List<object>> _subscribers = new Dictionary<Type, List<object>>();
+        private readonly Dictionary<String, Type> _subscribedTypes = new Dictionary<string, Type>();
+        private static readonly object _lock = new object();
+        private static MessageExchange _instance;
+        private IMessagePublisher _messagePublisher;
+
+        /// <summary>
+        /// Setting a contextProvider is only required for integration tests
+        /// Provide a () => null provider so that the synchronization context is not used during unit tests,
+        /// Outside of unit tests, a working synchronization context will automatically be available
+        /// </summary>
+        private Func<System.Threading.SynchronizationContext> _syncContextProvider;
+
+        public static MessageExchange Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    lock (_lock)
+                    {
+                        if (_instance == null)
+                        {
+                            _instance = new MessageExchange();
+                        }
+                    }
+                }
+                return _instance;
+            }
+        }
+
+        private MessageExchange()
+        {
+        }
+
+        public void ClearSubscriptions()
+        {
+            lock (_lock)
+            {
+                _subscribers.Clear();
+                _subscribedTypes.Clear();
+            }
+        }
+
+        public void SetPublisher(IMessagePublisher messagePublisher)
+        {
+            _messagePublisher = messagePublisher;
+            _messagePublisher?.OnMessageReceived(PublishReceivedMessage);
+        }
+
+        public IMessagePublisher GetPublisher()
+        {
+            return _messagePublisher;
+        }
+
+        /// <summary>
+        /// Publishes an event to the message publisher
+        /// </summary>
+        /// <typeparam name="TEvent"></typeparam>
+        /// <param name="eventToPublish"></param>
+        public void Publish<TEvent>(TEvent eventToPublish)
+        {
+            _messagePublisher?.Publish(eventToPublish);
+        }
+
+        /// <summary>
+        /// Publishes a received message to all subscribers
+        /// </summary>
+        private void PublishReceivedMessage(string jsonMessage)
+        {
+            var eventToPublish = JsonConvert.DeserializeObject<Message<object>>(jsonMessage);
+            if (!_subscribedTypes.ContainsKey(eventToPublish.key))
+            {
+                Log.Instance.log("No subscribers for event: " + eventToPublish.key, LogSeverity.Warn);
+                return;
+            }
+
+            Type eventType = _subscribedTypes[eventToPublish.key];
+
+            List<object> subscribers;
+
+            lock (_lock)
+            {
+                if (!_subscribers.ContainsKey(eventType)) return;
+                subscribers = _subscribers[eventType].ToList();
+            }
+
+            try
+            {
+                var rawPayload = eventToPublish.payload?.ToString();
+                object deserializedPayload = null;
+                if (rawPayload != null)
+                    deserializedPayload =
+                        JsonConvert.DeserializeObject(eventToPublish.payload?.ToString(), eventType);
+                var synchronizationContext = _syncContextProvider != null
+                    ? _syncContextProvider.Invoke()
+                    : System.Threading.SynchronizationContext.Current;
+
+                foreach (var subscriber in subscribers)
+                {
+                    Action invokeSubscriber = () =>
+                    {
+                        subscriber.GetType().GetMethod("Invoke")?.Invoke(subscriber, new[] { deserializedPayload });
+                    };
+
+                    if (synchronizationContext == null)
+                    {
+                        // If no synchronization context is available, invoke the subscriber directly.
+                        invokeSubscriber();
+                        continue;
+                    }
+
+                    // if synchronization context is available
+                    // post the deserialized payload to the subscriber on the synchronization context thread
+                    synchronizationContext.Post((_) =>
+                    {
+                        invokeSubscriber();
+                    }, null);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Instance.log(e.Message, LogSeverity.Error);
+            }
+        }
+
+        public void Subscribe<TMessagePayloadType>(Action<TMessagePayloadType> callback)
+        {
+            var eventType = typeof(TMessagePayloadType);
+
+            lock (_lock)
+            {
+                if (!_subscribers.ContainsKey(eventType))
+                {
+                    _subscribedTypes.Add(eventType.Name, eventType);
+                    _subscribers[eventType] = new List<object>();
+                }
+
+                _subscribers[eventType].Add(callback);
+            }
+        }
+
+        public void Unsubscribe<TEvent>(Action<TEvent> callback)
+        {
+            var eventType = typeof(TEvent);
+
+            lock (_lock)
+            {
+                if (_subscribers.ContainsKey(eventType))
+                {
+                    _subscribers[eventType].Remove(callback);
+                    if (_subscribers[eventType].Count == 0)
+                    {
+                        _subscribers.Remove(eventType);
+                        _subscribedTypes.Remove(eventType.Name);
+                    }
+                }
+            }
+        }
+        public void SetSynchronizationContextProvider(Func<System.Threading.SynchronizationContext> provider)
+        {
+            _syncContextProvider = provider;
+        }
+    }
+}

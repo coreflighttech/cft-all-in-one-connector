@@ -1,0 +1,33 @@
+# Build outputs
+**/bin/
+**/obj/
+**/.vs/
+*.user
+*.suo
+*.pdb
+
+# Runtime and local state
+*.log
+outputs/*
+!outputs/CFT-All-in-One-Connector/
+outputs/CFT-All-in-One-Connector/*
+outputs/CFT-All-in-One-Connector/Engine/
+outputs/CFT-All-in-One-Connector/*.exe
+outputs/CFT-All-in-One-Connector/*.dll
+
+# Keep the lightweight distribution documentation and unified profiles
+!outputs/CFT-All-in-One-Connector/Profiles/
+!outputs/CFT-All-in-One-Connector/Profiles/**
+!outputs/CFT-All-in-One-Connector/*.txt
+
+# Only the current application and engine sources belong to this repository
+work/*
+!work/CFTAllInOneConnectorApp/
+!work/CFTAllInOneConnectorEngine/
+
+# Supplied separately during build/publish; too large for a normal Git object
+work/CFTAllInOneConnectorEngine/Python/RuntimeAndPackages.*.zip
+
+# Local packages
+*.zip
+*.7z

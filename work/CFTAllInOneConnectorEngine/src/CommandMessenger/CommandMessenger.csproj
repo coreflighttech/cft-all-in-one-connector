@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyTitle>CmdMessenger</AssemblyTitle>
+    <Description>A messaging library for the Arduino and .NET/Mono platform</Description>
+    <Product>CmdMessenger</Product>
+    <Copyright>Copyright © Thijs Elenbaas 2013, 2014, 2015</Copyright>
+    <AssemblyVersion>3.7.1.0</AssemblyVersion>
+    <FileVersion>3.7.1.0</FileVersion>
+    <InformationalVersion>3.7.1</InformationalVersion>
+  </PropertyGroup>
+
+</Project>

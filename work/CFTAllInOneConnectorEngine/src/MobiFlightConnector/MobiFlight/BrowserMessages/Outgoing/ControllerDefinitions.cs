@@ -1,0 +1,19 @@
+﻿using System.Collections.Generic;
+
+namespace MobiFlight.BrowserMessages.Outgoing
+{
+    public class BoardDefinitions
+    {
+        public List<Board> Definitions;
+    }
+
+    public class JoystickDefinitions
+    {
+        public List<JoystickDefinition> Definitions;
+    }
+
+    public class MidiControllerDefinitions
+    {
+        public List<MidiBoardDefinition> Definitions;
+    }
+}

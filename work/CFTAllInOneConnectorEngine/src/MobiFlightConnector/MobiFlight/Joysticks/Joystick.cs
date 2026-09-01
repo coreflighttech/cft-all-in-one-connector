@@ -1,0 +1,595 @@
+﻿using HidSharp;
+using MobiFlight.Base;
+using MobiFlight.Firmware;
+using SharpDX.DirectInput;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using JoystickState = MobiFlight.Joysticks.JoystickState;
+
+namespace MobiFlight
+{
+    public class JoystickNotConnectedException : Exception
+    {
+        public JoystickNotConnectedException(string Message) : base(Message) { }
+    }
+
+    public class Joystick
+    {
+        public static readonly string ButtonPrefix = "Button";
+        public static readonly string AxisPrefix = "Axis";
+        public static readonly string PovPrefix = "POV";
+        public static readonly string SerialPrefix = "JS-";
+
+        public event ButtonEventHandler OnButtonPressed;
+        public event EventHandler OnDisconnected;
+
+        protected List<JoystickDevice> Buttons = new List<JoystickDevice>();
+        protected readonly List<JoystickDevice> Axes = new List<JoystickDevice>();
+        protected readonly List<JoystickDevice> POV = new List<JoystickDevice>();
+        protected readonly List<JoystickOutputDevice> Lights = new List<JoystickOutputDevice>();
+
+        protected readonly SharpDX.DirectInput.Joystick DIJoystick;
+        protected readonly JoystickDefinition Definition;
+
+        protected HidStream Stream;
+        protected HidDevice Device;
+        protected bool RequiresOutputUpdate = false;
+        private object StateLock = new object();
+        protected JoystickState State = null;
+
+        /// <summary>
+        /// This map defines how a usageId maps to a JoystickState property name.
+        /// </summary>
+        private static readonly Dictionary<int, string> UsageMap = new Dictionary<int, string>
+        {
+            [48] = "X",
+            [49] = "Y",
+            [50] = "Z",
+            [51] = "RotationX",
+            [52] = "RotationY",
+            [53] = "RotationZ",
+            [54] = "Slider1",
+            [55] = "Slider2"
+        };
+
+        /// <summary>
+        /// This allows to raise OnButtonPressed from derived classes
+        /// https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/events/how-to-raise-base-class-events-in-derived-classes
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void TriggerButtonPressed(object sender, InputEventArgs e)
+        {
+            OnButtonPressed?.Invoke(sender, e);
+        }
+
+        public static bool IsJoystickSerial(string serial)
+        {
+            return (serial != null && serial.Contains(SerialPrefix));
+        }
+
+        public virtual string Name
+        {
+            get { return DIJoystick?.Information.InstanceName; }
+        }
+
+        public virtual string Serial
+        {
+            get { return SerialPrefix + DIJoystick.Information.InstanceGuid; }
+        }
+
+        public SharpDX.DirectInput.DeviceType Type
+        {
+            get { return DIJoystick.Information.Type; }
+        }
+
+        public Capabilities Capabilities
+        {
+            get
+            {
+                return this.DIJoystick.Capabilities;
+            }
+        }
+
+        public Joystick(SharpDX.DirectInput.Joystick joystick, JoystickDefinition definition)
+        {
+            this.DIJoystick = joystick;
+            this.Definition = definition;
+        }
+
+        protected virtual void EnumerateDevices()
+        {
+            foreach (DeviceObjectInstance device in this.DIJoystick.GetObjects())
+            {
+                this.DIJoystick.GetObjectInfoById(device.ObjectId);
+
+                bool IsAxis = (device.ObjectId.Flags & DeviceObjectTypeFlags.AbsoluteAxis) > 0;
+                bool IsButton = (device.ObjectId.Flags & DeviceObjectTypeFlags.Button) > 0;
+                bool IsPOV = (device.ObjectId.Flags & DeviceObjectTypeFlags.PointOfViewController) > 0;
+
+                if (IsAxis && Axes.Count < DIJoystick.Capabilities.AxeCount)
+                {
+                    RegisterAxis(device);
+                }
+                else if (IsButton)
+                {
+                    RegisterButton(device);
+                }
+                else if (IsPOV)
+                {
+                    RegisterPOV(device);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        protected virtual void RegisterAxis(DeviceObjectInstance device)
+        {
+            String axisName;
+            string axisLabel = "Unknown";
+            try
+            {
+                var OffsetAxisName = GetAxisNameForUsage(device.Usage);
+                axisName = $"{AxisPrefix} {OffsetAxisName}";
+                axisLabel = MapDeviceNameToLabel($"{AxisPrefix} {OffsetAxisName}");
+
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                LogAddInputError(device, axisLabel, "Axis can't be mapped");
+                return;
+            }
+            Axes.Add(new JoystickDevice() { Name = axisName, Label = axisLabel, Type = DeviceType.AnalogInput, JoystickDeviceType = JoystickDeviceType.Axis });
+            LogInputAdded(device, axisLabel);
+        }
+
+        protected virtual void RegisterButton(DeviceObjectInstance device)
+        {
+            // Use the device.Usage value so this is consistent with how Axes are referenced and avoid ID collisions
+            // when looking up names in the the .joystick.json file.
+            var buttonName = $"{ButtonPrefix} {device.Usage}";
+            var buttonLabel = MapDeviceNameToLabel(buttonName);
+            Buttons.Add(new JoystickDevice() { Name = buttonName, Label = buttonLabel, Type = DeviceType.Button, JoystickDeviceType = JoystickDeviceType.Button });
+            LogInputAdded(device, buttonLabel);
+        }
+
+        protected virtual void RegisterPOV(DeviceObjectInstance device)
+        {
+            String name = device.Name;
+
+            AddPovSwitchWithName(name);
+
+            LogInputAdded(device, name);
+        }
+
+        protected virtual void AddPovSwitchWithName(string name)
+        {
+            POV.Add(new JoystickDevice() { Name = $"{PovPrefix} {name}U", Label = $"{name} (↑)", Type = DeviceType.Button, JoystickDeviceType = JoystickDeviceType.POV });
+            POV.Add(new JoystickDevice() { Name = $"{PovPrefix} {name}UR", Label = $"{name} (↗)", Type = DeviceType.Button, JoystickDeviceType = JoystickDeviceType.POV });
+            POV.Add(new JoystickDevice() { Name = $"{PovPrefix} {name}R", Label = $"{name} (→)", Type = DeviceType.Button, JoystickDeviceType = JoystickDeviceType.POV });
+            POV.Add(new JoystickDevice() { Name = $"{PovPrefix} {name}DR", Label = $"{name} (↘)", Type = DeviceType.Button, JoystickDeviceType = JoystickDeviceType.POV });
+            POV.Add(new JoystickDevice() { Name = $"{PovPrefix} {name}D", Label = $"{name} (↓)", Type = DeviceType.Button, JoystickDeviceType = JoystickDeviceType.POV });
+            POV.Add(new JoystickDevice() { Name = $"{PovPrefix} {name}DL", Label = $"{name} (↙)", Type = DeviceType.Button, JoystickDeviceType = JoystickDeviceType.POV });
+            POV.Add(new JoystickDevice() { Name = $"{PovPrefix} {name}L", Label = $"{name} (←)", Type = DeviceType.Button, JoystickDeviceType = JoystickDeviceType.POV });
+            POV.Add(new JoystickDevice() { Name = $"{PovPrefix} {name}UL", Label = $"{name} (↖)", Type = DeviceType.Button, JoystickDeviceType = JoystickDeviceType.POV });
+        }
+
+        protected void LogInputAdded(DeviceObjectInstance device, string label)
+        {
+            int offset = device.Offset;
+            int usage = device.Usage;
+            ObjectAspect aspect = device.Aspect;
+            String name = device.Name;
+            Log.Instance.log($"Added {DIJoystick.Information.InstanceName} Aspect: {aspect} Offset: {offset} Usage: {usage} Button: {name} Label: {label}.", LogSeverity.Debug);
+        }
+
+        protected void LogAddInputError(DeviceObjectInstance device, string label, string errmsg)
+        {
+            int offset = device.Offset;
+            int usage = device.Usage;
+            ObjectAspect aspect = device.Aspect;
+            String name = device.Name;
+            Log.Instance.log($"{errmsg}: {DIJoystick.Information.InstanceName} Aspect: {aspect} Offset: {offset} Usage: {usage} Axis: {name} Label: {label}.", LogSeverity.Error);
+        }
+
+        public string MapDeviceNameToLabel(string deviceName)
+        {
+            // First try and look for a custom label.
+            var input = Definition?.FindInputByName(deviceName);
+            if (input != null)
+            {
+                return input.Label;
+            }
+            string result = string.Empty;
+
+            if (deviceName.StartsWith(ButtonPrefix))
+            {
+                result = Buttons.Find(b => b.Name == deviceName)?.Label ?? string.Empty;
+            }
+            else if (deviceName.StartsWith(AxisPrefix))
+            {
+                result = Axes.Find(a => a.Name == deviceName)?.Label ?? string.Empty;
+            }
+            else if (deviceName.StartsWith(PovPrefix))
+            {
+                result = POV.Find(p => p.Name == deviceName)?.Label ?? string.Empty;
+            }
+
+            if (result == string.Empty)
+                result = deviceName;
+
+            return result;
+        }
+
+        public virtual void Connect(IntPtr handle)
+        {
+            EnumerateDevices();
+            EnumerateOutputDevices();
+
+            if (DIJoystick == null) return;
+
+            DIJoystick.SetCooperativeLevel(handle, CooperativeLevel.Background | CooperativeLevel.NonExclusive);
+            DIJoystick.Properties.BufferSize = 16;
+            DIJoystick.Acquire();
+        }
+
+        protected virtual void EnumerateOutputDevices()
+        {
+            Lights.Clear();
+            Definition?.Outputs?.ForEach(output =>
+            {
+                if (output.Type != null && output.Type != DeviceType.Output.ToString()) return;
+                Lights.Add(new JoystickOutputDevice() { Label = output.Label, Name = output.Id, Byte = output.Byte, Bit = output.Bit });
+            });
+        }
+
+        public List<DeviceReference> GetAvailableDevices()
+        {
+            List<DeviceReference> result = new List<DeviceReference>();
+
+            GetButtonsSorted().ForEach((item) =>
+            {
+                result.Add(item);
+            });
+            GetAxisSorted().ForEach((item) =>
+            {
+                result.Add(item);
+            });
+            POV.ForEach((item) =>
+            {
+                result.Add(item);
+            });
+            return result;
+        }
+
+        private List<JoystickDevice> GetButtonsSorted()
+        {
+            return Buttons.OrderBy(button => GetIndexForJoystickDevice(button)).ToList();
+        }
+
+        private List<JoystickDevice> GetAxisSorted()
+        {
+            return Axes.OrderBy(axis => GetIndexForJoystickDevice(axis)).ToList();
+        }
+
+        public virtual int GetIndexForKey(string key)
+        {
+            // -2 = definition not found / no inputs in definition
+            // -1 = index not found
+            // 0 or greater: valid index
+            return Definition?.Inputs?.FindIndex(input => input.Name == key) ?? -2;
+        }
+
+        public int GetIndexForJoystickDevice(JoystickDevice button)
+        {
+            var index = GetIndexForKey(button.Name);
+            // Ensure items in definition appear first
+            if (index < 0)
+            {
+                index = Int32.MaxValue; // force undefined stuff to the end of the list
+            }
+            return index;
+        }
+
+        private void Connect()
+        {
+            if (Device == null)
+            {
+                Device = DeviceList.Local.GetHidDeviceOrNull(vendorID: Definition.VendorId, productID: Definition.ProductId);
+                if (Device == null) return;
+            }
+
+            Stream = Device.Open();
+        }
+
+        public virtual List<DeviceReference> GetAvailableOutputDevices()
+        {
+            var result = new List<DeviceReference>();
+            Lights.ForEach((item) =>
+            {
+                result.Add(item);
+            });
+            return result;
+        }
+
+        public virtual List<IBaseDevice> GetAvailableLcdDevices()
+        {
+            var result = new List<IBaseDevice>();
+            Lights.Where(l => l.Type == DeviceType.LcdDisplay).ToList().ForEach((item) =>
+            {
+                var outputDisplay = item as JoystickOutputDisplay;
+                result.Add(new LcdDisplay() { Address = item.Byte, Cols = outputDisplay.Cols, Lines = outputDisplay.Lines, Name = outputDisplay.Name });
+            });
+
+            return result;
+        }
+
+        public virtual void Update()
+        {
+            if (DIJoystick == null) return;
+
+            try
+            {
+                DIJoystick.Poll();
+
+                JoystickState newState = JoystickState.Create(DIJoystick.GetCurrentState());
+                lock (StateLock)
+                {
+                    UpdateButtons(newState);
+                    UpdateAxis(newState);
+                    UpdatePOV(newState);
+                    UpdateOutputDeviceStates();
+
+                    // at the very end update our state
+                    State = newState;
+                }
+            }
+            catch (SharpDX.SharpDXException ex)
+            {
+                if (ex.Descriptor.ApiCode == "InputLost")
+                {
+                    OnDeviceRemoved();
+                }
+            }
+        }
+
+        public virtual void Retrigger()
+        {
+            lock (StateLock)
+            {
+                State = null;
+            }
+        }
+
+        public JoystickDefinition GetJoystickDefinition()
+        {
+            return Definition;
+        }
+
+        private void UpdatePOV(JoystickState newState)
+        {
+            if (POV.Count == 0) return;
+            int oldValue = -1;
+            if (StateExists()) oldValue = State.PointOfViewControllers[0];
+            int newValue = newState.PointOfViewControllers[0];
+
+            int index;
+
+            if (oldValue != newValue)
+            {
+                if (oldValue > -1)
+                {
+                    index = (int)Math.Round(oldValue / 4500f);
+
+                    OnButtonPressed?.Invoke(this, new InputEventArgs()
+                    {
+                        Controller = new Controller() { Serial = Serial, Name = Name },
+                        Device = new DeviceReference() { Type = POV[index].Type, Name = POV[index].Name, Label = POV[index].Label },
+                        InputType = DeviceType.Button,
+                        Value = (int)MobiFlightButton.InputEvent.RELEASE
+                    });
+                }   
+                ;
+
+                if (newValue > -1)
+                {
+
+                    index = (int)Math.Round(newValue / 4500f);
+
+                    OnButtonPressed?.Invoke(this, new InputEventArgs()
+                    {
+                        Controller = new Controller() { Serial = Serial, Name = Name },
+                        Device = new DeviceReference() { Type = POV[index].Type, Name = POV[index].Name, Label = POV[index].Label },
+                        InputType = DeviceType.Button,
+                        Value = (int)MobiFlightButton.InputEvent.PRESS
+                    });
+                }
+            }
+        }
+
+        protected virtual void UpdateAxis(JoystickState newState)
+        {
+            for (int CurrentAxis = 0; CurrentAxis != Axes.Count; CurrentAxis++)
+            {
+
+                int oldValue = 0;
+                if (StateExists())
+                {
+                    oldValue = GetValueForAxisFromState(CurrentAxis, State);
+                }
+
+                int newValue = GetValueForAxisFromState(CurrentAxis, newState);
+
+                if (!StateExists() || oldValue != newValue)
+                    OnButtonPressed?.Invoke(this, new InputEventArgs()
+                    {
+                        Controller = new Controller() { Name = this.Name, Serial = this.Serial },
+                        Device = new DeviceReference() { Type = Axes[CurrentAxis].Type, Name = Axes[CurrentAxis].Name, Label = Axes[CurrentAxis].Label },
+                        InputType = DeviceType.AnalogInput,
+                        Value = newValue
+                    });
+            }
+        }
+
+        protected void UpdateButtons(JoystickState newState)
+        {
+            if (Buttons.Count == 0) return;
+
+            for (int i = 0; i < newState.Buttons.Length; i++)
+            {
+                if (!StateExists() || State.Buttons.Length < i || State.Buttons[i] != newState.Buttons[i])
+                {
+                    if (newState.Buttons[i] || (State != null))
+                        OnButtonPressed?.Invoke(this, new InputEventArgs()
+                        {
+                            Controller = new Controller() { Name = this.Name, Serial = this.Serial },
+                            Device = new DeviceReference() { Type = Buttons[i].Type, Name = Buttons[i].Name, Label = Buttons[i].Label },
+                            InputType = DeviceType.Button,
+                            Value = newState.Buttons[i] ? 0 : 1
+                        });
+                }
+            }
+        }
+
+        protected int GetValueForAxisFromState(int currentAxis, JoystickState state)
+        {
+            String RawAxisName = Axes[currentAxis].Name.Replace(AxisPrefix, "").TrimStart();
+            if (RawAxisName.Contains("Slider"))
+            {
+                byte index = 0;
+                if (RawAxisName == "Slider2") index = 1;
+
+                return state.Sliders[index];
+            }
+            return (int)state.GetType().GetProperty(RawAxisName).GetValue(state, null);
+        }
+
+        protected bool StateExists()
+        {
+            return State != null;
+        }
+
+        public static String GetAxisNameForUsage(int usage)
+        {
+            if (!UsageMap.ContainsKey(usage))
+                throw new ArgumentOutOfRangeException();
+            return UsageMap[usage];
+        }
+
+        public virtual void SetOutputDeviceState(string name, byte state)
+        {
+            foreach (var light in Lights)
+            {
+                if (light.Label != name) continue;
+                if (light.State == state) continue;
+
+                light.State = state;
+                RequiresOutputUpdate = true;
+                return;
+            }
+        }
+
+        public virtual void SetLcdDisplay(string address, string value)
+        {
+            var display = Lights.Find(l => l.Name == address) as JoystickOutputDisplay;
+            if (display == null) return;
+
+            if (display.Text == value) return;
+
+            RequiresOutputUpdate = true;
+            display.Text = value;
+        }
+
+        public virtual IEnumerable<DeviceType> GetConnectedOutputDeviceTypes()
+        {
+            List<DeviceType> result = new List<DeviceType>();
+            result.Add(DeviceType.Output);
+            return result;
+        }
+
+        protected virtual void SendData(byte[] data)
+        {
+            // Don't try and send data if no outputs are defined.
+            if (Definition?.Outputs == null || Definition?.Outputs.Count == 0)
+            {
+                return;
+            }
+
+            if (!RequiresOutputUpdate) return;
+            if (Stream == null)
+            {
+                Connect();
+            }
+            ;
+            Stream.SetFeature(data);
+
+            RequiresOutputUpdate = false;
+        }
+
+        public virtual void UpdateOutputDeviceStates()
+        {
+            // Honeycomb LED protocol: Feature report with bits set for each lit LED and cleared for each unlit LED.
+            // Byte 0 is unused on Bravo, but used as the report ID on Sierra. Report ID for the LED command must be 1 on Sierra.
+            // Setting this byte to 1 is supported by both throttles.
+            // Other bytes initialized to zero to ensure lights are only turned on if they are set to 1 by output events.
+            var data = new byte[] { 1, 0, 0, 0, 0 };
+
+            foreach (var light in Lights)
+            {
+                data[light.Byte] |= (byte)(light.State << light.Bit);
+            }
+
+            try
+            {
+                SendData(data);
+            }
+            catch (System.IO.IOException)
+            {
+                // this happens when the device is removed.
+                OnDeviceRemoved();
+            }
+        }
+
+        public virtual void ShowUserMessage(int messageCode, params string[] parameters)
+        {
+            // nothing to do
+            // only relevant for game controllers which have a 
+            // means to show a message to an user.
+        }
+
+        public virtual void Stop()
+        {
+            foreach (var light in Lights)
+            {
+                light.State = 0;
+            }
+            RequiresOutputUpdate = true;
+            UpdateOutputDeviceStates();
+        }
+
+        public virtual void Shutdown()
+        {
+            // nothing to do
+        }
+
+        protected virtual void OnDeviceRemoved()
+        {
+            DIJoystick?.Unacquire();
+            OnDisconnected?.Invoke(this, null);
+
+        }
+
+        public List<DeviceReference> GetConnectedInputDevices()
+        {
+            var result = new List<DeviceReference>();
+            result.AddRange(Buttons);
+            result.AddRange(Axes);
+            result.AddRange(POV);
+            return result;
+        }
+    }
+}

@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyTitle>CommandMessenger.Transport.Serial</AssemblyTitle>
+    <Description>A messaging library for the Arduino and .NET/Mono platform</Description>
+    <Product>CmdMessenger</Product>
+    <Copyright>Copyright © Thijs Elenbaas 2013, 2014, 2015</Copyright>
+    <AssemblyVersion>3.7.0.0</AssemblyVersion>
+    <FileVersion>3.7.0.0</FileVersion>
+    <InformationalVersion>3.7.0</InformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Ports" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommandMessenger\CommandMessenger.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,680 @@
+using MobiFlight;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MobiFlight.InputConfig;
+using MobiFlight.OutputConfig;
+using System;
+using System.IO;
+using System.Xml;
+using MobiFlight.Base;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace MobiFlight.Tests
+{
+    [TestClass()]
+    public class InputConfigItemTests
+    {
+        [TestMethod()]
+        public void InputConfigItemTest()
+        {
+            InputConfigItem o = new InputConfigItem();
+            Assert.IsInstanceOfType(o, typeof(InputConfigItem), "Not of type InputConfigItem");
+            Assert.AreEqual(0, o.Preconditions.Count, "Preconditions Count other than 0");
+            Assert.IsNull(o.Device, "Device should be null when not set");
+        }
+
+        [TestMethod()]
+        public void GetSchemaTest()
+        {
+            InputConfigItem o = generateTestObject();
+            Assert.IsNull(o.GetSchema());
+        }
+        #region XML (De-)Serialization tests
+        [TestMethod()]
+        public void ReadXmlTest_WithButton_DeserializeCorrectly()
+        {
+            InputConfigItem o = new InputConfigItem();
+            String s = System.IO.File.ReadAllText(@"assets\MobiFlight\InputConfig\InputConfigItem\ReadXmlTest.1.xml");
+            StringReader sr = new StringReader(s);
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.IgnoreWhitespace = true;
+
+            System.Xml.XmlReader xmlReader = System.Xml.XmlReader.Create(sr, settings);
+            xmlReader.ReadToDescendant("settings");
+            o.ReadXml(xmlReader);
+
+            Assert.AreEqual("TestSerial", o.Controller.Serial, "ModuleSerial not the same");
+            Assert.AreEqual("TestName", o.Device.Name, "Name not the same");
+            Assert.AreEqual(0, o.Preconditions.Count, "Preconditions Count not the same");
+            Assert.AreEqual("Button", o.Device.Type, "Type not the same");
+            Assert.IsNull(o.button.onPress, "button onpress not null");
+            Assert.IsNotNull(o.button.onRelease, "button onRelease is null");
+            Assert.IsNotNull(o.ConfigRefs, "ConfigRefs is null");
+            Assert.HasCount(2, o.ConfigRefs);
+
+            Assert.IsNotNull(o.Device, "Device should not be null after ReadXml");
+            Assert.IsInstanceOfType(o.Device, typeof(MobiFlight.InputConfig.Button));
+            Assert.AreEqual("TestName", o.Device.Name);
+        }
+
+        [TestMethod()]
+        public void ReadXmlTest_WithEncoder_DeserializeCorrectly()
+        {
+
+            var o = new InputConfigItem();
+            var s = System.IO.File.ReadAllText(@"assets\MobiFlight\InputConfig\InputConfigItem\ReadXmlTest.2.xml");
+            var sr = new StringReader(s);
+            var settings = new XmlReaderSettings();
+            settings.IgnoreWhitespace = true;
+
+            var xmlReader = System.Xml.XmlReader.Create(sr, settings);
+            xmlReader.ReadToDescendant("settings");
+            o.ReadXml(xmlReader);
+
+            Assert.AreEqual("TestSerial", o.Controller.Serial, "ModuleSerial not the same");
+            Assert.HasCount(0, o.Preconditions, "Preconditions Count not the same");
+            Assert.AreEqual("TestName", o.Device.Name, "Name not the same");
+            Assert.AreEqual("Button", o.Device.Type, "Type not the same");
+            Assert.IsNull(o.button.onPress, "button onpress not null");
+            Assert.IsNotNull(o.button.onRelease, "button onRelease is null");
+            Assert.IsNull(o.encoder.onLeft, "encoder onLeft not null");
+            Assert.IsNotNull(o.encoder.onLeftFast, "encoder onLeftFast is null");
+            Assert.IsNull(o.encoder.onRight, "encoder onRight not null");
+            Assert.IsNotNull(o.encoder.onRightFast, "encoder onRightFast is null");
+            Assert.IsNotNull(o.ConfigRefs, "ConfigRefs is null");
+            Assert.HasCount(0, o.ConfigRefs, "ConfigRefs.Count is not 2");
+        }
+
+        [TestMethod()]
+        public void ReadXmlTest_WithInputShiftRegister_DeserializeCorrectly()
+        {
+            var o = new InputConfigItem();
+            var s = System.IO.File.ReadAllText(@"assets\MobiFlight\InputConfig\InputConfigItem\ReadXmlTest.InputShiftRegister.xml");
+            var sr = new StringReader(s);
+            var settings = new XmlReaderSettings();
+            settings.IgnoreWhitespace = true;
+
+            var xmlReader = System.Xml.XmlReader.Create(sr, settings);
+            xmlReader.ReadToDescendant("settings");
+            o.ReadXml(xmlReader);
+
+            Assert.AreEqual("TestSerial", o.Controller.Serial, "ModuleSerial not the same");
+            Assert.HasCount(0, o.Preconditions, "Preconditions Count not the same");
+            Assert.AreEqual("TestName:1", o.Device.Name, "Name not the same");
+            Assert.AreEqual("Button", o.Device.Type, "Type not the same");
+            Assert.IsNull(o.button.onPress, "Input Shift Register onpress not null");
+            Assert.IsNotNull(o.button.onRelease, "Input Shift Register onRelease is null");
+            Assert.IsNotNull(o.button.onRelease as JeehellInputAction, "OnRelease is not of type JeehellInputAction");
+
+            Assert.IsNotNull(o.Device, "Device should not be null after ReadXml");
+            var device = o.Device as Button;
+            Assert.IsNotNull(device, "Device should be of type Button");
+            Assert.AreEqual("TestName:1", device.Name);
+        }
+
+        [TestMethod()]
+        public void ReadXmlTest_WithInputMultiplexer_DeserializeCorrectly()
+        {
+            var o = new InputConfigItem();
+            var s = System.IO.File.ReadAllText(@"assets\MobiFlight\InputConfig\InputConfigItem\ReadXmlTest.InputMultiplexer.xml");
+            var sr = new StringReader(s);
+            var settings = new XmlReaderSettings();
+            settings.IgnoreWhitespace = true;
+
+            var xmlReader = System.Xml.XmlReader.Create(sr, settings);
+            xmlReader.ReadToDescendant("settings");
+            o.ReadXml(xmlReader);
+
+            Assert.AreEqual("TestSerial", o.Controller.Serial, "ModuleSerial not the same");
+            Assert.HasCount(0, o.Preconditions, "Preconditions Count not the same");
+            Assert.AreEqual("TestName:1", o.Device.Name, "Name not the same");
+            Assert.AreEqual("Button", o.Device.Type, "Type not the same");
+            Assert.IsNull(o.button.onPress, "button onpress not null");
+            Assert.IsNotNull(o.button.onRelease, "button onRelease is null");
+            Assert.IsNotNull(o.button.onRelease as JeehellInputAction, "OnRelease is not of type JeehellInputAction");
+
+            Assert.IsNotNull(o.Device, "Device should not be null after ReadXml");
+            var device = o.Device as Button;
+            Assert.IsNotNull(device, "Device should be of type Button");
+            Assert.AreEqual("TestName:1", device.Name);
+        }
+
+        [TestMethod()]
+        public void ReadXmlTest_RegressionIssue860_DeserializeCorrectly()
+        {
+            var o = new InputConfigItem();
+            var s = System.IO.File.ReadAllText(@"assets\MobiFlight\InputConfig\InputConfigItem\ReadXmlTest.860.xml");
+            var sr = new StringReader(s);
+            var settings = new XmlReaderSettings();
+            settings.IgnoreWhitespace = true;
+
+            var xmlReader = System.Xml.XmlReader.Create(sr, settings);
+            xmlReader.ReadToDescendant("settings");
+            o.ReadXml(xmlReader);
+
+            Assert.AreEqual("737PEDESTAL1", o.Controller.Name, "Controller Name not the same");
+            Assert.AreEqual("SN-769-a6a", o.Controller.Serial, "Controller Serial not the same");
+            Assert.AreEqual("Analog 67 A13", o.Device.Name, "Name not the same");
+            Assert.HasCount(1, o.Preconditions, "Preconditions Count not the same");
+            Assert.HasCount(1, o.ConfigRefs, "Config ref count is not correct");
+        }
+
+        [TestMethod()]
+        public void WriteXmlTest()
+        {
+            StringWriter sw = new StringWriter();
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Encoding = System.Text.Encoding.UTF8;
+            settings.Indent = true;
+            //settings.NewLineHandling = NewLineHandling.Entitize;
+            System.Xml.XmlWriter xmlWriter = System.Xml.XmlWriter.Create(sw, settings);
+
+            InputConfigItem o = generateTestObject();
+            xmlWriter.WriteStartElement("settings");
+            o.WriteXml(xmlWriter);
+            xmlWriter.WriteEndElement();
+            xmlWriter.Flush();
+            string s = sw.ToString();
+
+            String result = System.IO.File.ReadAllText(@"assets\MobiFlight\InputConfig\InputConfigItem\WriteXmlTest.1.xml");
+
+            Assert.AreEqual(s, result, "The both strings are not equal");
+
+            // https://github.com/MobiFlight/MobiFlight-Connector/issues/797
+            o = new InputConfigItem();
+            o.Device = new MobiFlight.InputConfig.AnalogInput() { Name = "Analog 67 A13" };
+            if (o.analog == null) o.analog = new InputConfig.AnalogInputConfig();
+            o.analog.onChange = new MSFS2020CustomInputAction() { Command = "test", PresetId = Guid.NewGuid().ToString() };
+
+            sw = new StringWriter();
+            xmlWriter = System.Xml.XmlWriter.Create(sw, settings);
+            xmlWriter.WriteStartElement("settings");
+            o.WriteXml(xmlWriter);
+            xmlWriter.WriteEndElement();
+            xmlWriter.Flush();
+            s = sw.ToString();
+
+            StringReader sr = new StringReader(s);
+            XmlReaderSettings readerSettings = new XmlReaderSettings();
+            readerSettings.IgnoreWhitespace = true;
+
+            XmlReader xmlReader = System.Xml.XmlReader.Create(sr, readerSettings);
+            InputConfigItem o1 = new InputConfigItem();
+            xmlReader.ReadToDescendant("settings");
+            o1.ReadXml(xmlReader);
+
+            Assert.IsNotNull(o1.analog, "Is null");
+            Assert.AreEqual(o.analog.onChange is MSFS2020CustomInputAction, o1.analog.onChange is MSFS2020CustomInputAction, "Not of type MSFS2020CustomInputAction");
+        }
+        #endregion
+
+        #region JSON (de-)serialization tests
+        [TestMethod()]
+        public void OnDeserialized_TypeNotSet_DoesNotCreateDevice()
+        {
+            string json = @"{
+                ""Type"": ""InputConfigItem"", 
+                ""GUID"": ""test-guid"", 
+                ""DeviceType"": ""-"" 
+            }";
+
+            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<InputConfigItem>(json);
+
+            Assert.IsNull(result.Device, "Device should remain null when DeviceType is TYPE_NOTSET");
+        }
+        #endregion
+
+        [TestMethod()]
+        public void CloneTest()
+        {
+            InputConfigItem o = generateTestObject();
+            InputConfigItem c = (InputConfigItem)o.Clone();
+
+            Assert.IsNotNull(c.button, "Button is null");
+            Assert.IsNull(c.encoder, "Encoder is not null");
+            Assert.AreEqual(c.Controller.Serial, o.Controller.Serial, "Module Serial not the same");
+            Assert.AreEqual(c.Name, o.Name, "Name not the same");
+            Assert.HasCount(1, c.Preconditions, "Precondition Count is not 1");
+
+            Assert.AreEqual(o.Device.Name, c.Device.Name, "DeviceName not the same");
+            Assert.AreEqual(o.Device.Type, c.Device.Type, "DeviceType not the same");
+            Assert.IsNotNull(c.Device, "Device should not be null after Clone");
+            Assert.AreEqual(o.Device, c.Device, "Devices should be the same");
+        }
+
+        private InputConfigItem generateTestObject()
+        {
+            InputConfigItem result = new InputConfigItem();
+            result.Name = "Test Input Config Item";
+            result.Active = false;
+            result.GUID = "123-input";
+
+            result.button = new InputConfig.ButtonInputConfig();
+            result.button.onRelease = new InputConfig.FsuipcOffsetInputAction()
+            {
+                FSUIPC = new FsuipcOffset()
+                {
+                    BcdMode = true,
+                    Mask = 0xFFFF,
+                    Offset = 0x1234,
+                    Size = 2
+                },
+                Value = "1"
+            };
+
+            result.encoder = null;
+            result.Controller = new Controller() { Serial = "TestSerial" };
+
+            result.Device = new MobiFlight.InputConfig.Button() { Name = "TestName" };
+
+            result.Preconditions.Add(new Precondition() { Serial = "PreConTestSerial" });
+            result.ConfigRefs.Add(new Base.ConfigRef() { Active = true, Placeholder = "@", Ref = "0b1c877f-baf3-4c69-99e6-6c31429fe3bd" });
+            result.ConfigRefs.Add(new Base.ConfigRef() { Active = false, Placeholder = "%", Ref = "7d1370d3-56e9-497a-8abb-63ecc169defe" });
+
+            return result;
+        }
+
+        [TestMethod()]
+        public void EqualsTest()
+        {
+            InputConfigItem o1 = new InputConfigItem();
+            InputConfigItem o2 = new InputConfigItem();
+            o1.GUID = o2.GUID;
+
+            Assert.IsTrue(o1.Equals(o2));
+
+            o1 = generateTestObject();
+            Assert.IsFalse(o1.Equals(o2));
+
+            o2 = generateTestObject();
+            Assert.IsTrue(o1.Equals(o2));
+
+            var list1 = new List<IConfigItem>() { o1, o2 };
+            var list2 = new List<IConfigItem>() { o1, o2 };
+
+            Assert.IsTrue(list1.SequenceEqual(list2));
+        }
+
+        [TestMethod()]
+        public void GetStatisticsTest()
+        {
+            // https://github.com/MobiFlight/MobiFlight-Connector/issues/623
+            InputConfigItem o = new InputConfigItem();
+            String s = System.IO.File.ReadAllText(@"assets\MobiFlight\InputConfig\InputConfigItem\ReadXmlTest.623.xml");
+            StringReader sr = new StringReader(s);
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.IgnoreWhitespace = true;
+
+            System.Xml.XmlReader xmlReader = System.Xml.XmlReader.Create(sr, settings);
+            xmlReader.ReadToDescendant("settings");
+            o.ReadXml(xmlReader);
+
+            var statistics = o.GetStatistics();
+            Assert.IsNotNull(statistics, "Statistics should be always an empty Dictionary<String, int>");
+            Assert.HasCount(0, statistics);
+
+            o.analog = new InputConfig.AnalogInputConfig();
+            o.analog.onChange = new InputConfig.MSFS2020CustomInputAction();
+            statistics = o.GetStatistics();
+            Assert.HasCount(o.analog.GetStatistics().Count, statistics);
+        }
+
+        [TestMethod()]
+        public void GetInputActionsByTypeTest()
+        {
+            InputConfigItem o = new InputConfigItem();
+            o.analog = new AnalogInputConfig()
+            {
+                onChange = new VariableInputAction()
+            };
+
+            var result = o.GetInputActionsByType(typeof(VariableInputAction));
+            Assert.HasCount(1, result);
+
+            o.encoder = new EncoderInputConfig()
+            {
+                onLeft = new VariableInputAction()
+            };
+
+            result = o.GetInputActionsByType(typeof(VariableInputAction));
+            Assert.HasCount(2, result);
+
+            o.button = new InputConfig.ButtonInputConfig()
+            {
+                onPress = new VariableInputAction()
+            };
+
+            result = o.GetInputActionsByType(typeof(VariableInputAction));
+            Assert.HasCount(3, result);
+        }
+
+
+        [TestMethod()]
+        [DataRow((int)MobiFlightButton.InputEvent.PRESS, "onPress")]
+        [DataRow((int)MobiFlightButton.InputEvent.RELEASE, "onRelease")]
+        [DataRow((int)MobiFlightButton.InputEvent.LONG_RELEASE, "onLongRelease")]
+        [DataRow((int)MobiFlightButton.InputEvent.HOLD, "onHold")]
+        [DataRow((int)MobiFlightButton.InputEvent.REPEAT, "onHold")]
+        public void GetInputAction_Button_ReturnsCorrectAction(
+     int inputEvent,
+     string actionName)
+        {
+            var action = new VariableInputAction();
+
+            var config = new InputConfigItem
+            {
+                button = new ButtonInputConfig()
+            };
+
+            config.button.SetInputActionByName(actionName, action);
+
+            var args = new InputEventArgs
+            {
+                InputType = DeviceType.Button,
+                Value = inputEvent
+            };
+
+            var result = config.GetInputAction(args);
+
+            Assert.AreSame(action, result);
+        }
+
+        [TestMethod()]
+        public void GetInputAction_Button_ReleaseHeldPastDelayResolvesToReleaseWhenNoOnLongRelease()
+        {
+            var releaseAction = new VariableInputAction();
+
+            var config = new InputConfigItem
+            {
+                button = new ButtonInputConfig { onRelease = releaseAction, LongReleaseDelay = 300 }
+            };
+
+            var args = new InputEventArgs
+            {
+                InputType = DeviceType.Button,
+                Value = (int)MobiFlightButton.InputEvent.RELEASE,
+                HeldDurationMs = 5000
+            };
+
+            var result = config.GetInputAction(args);
+
+            Assert.AreSame(releaseAction, result, "No onLongRelease is configured, so this never upgrades past RELEASE - same as execute() does.");
+        }
+
+        [TestMethod()]
+        public void GetInputAction_Button_ReleaseHeldPastDelayResolvesToLongReleaseWhenConfigured()
+        {
+            var longReleaseAction = new VariableInputAction();
+
+            var config = new InputConfigItem
+            {
+                button = new ButtonInputConfig { onLongRelease = longReleaseAction, LongReleaseDelay = 300 }
+            };
+
+            var args = new InputEventArgs
+            {
+                InputType = DeviceType.Button,
+                Value = (int)MobiFlightButton.InputEvent.RELEASE,
+                HeldDurationMs = 500
+            };
+
+            var result = config.GetInputAction(args);
+
+            Assert.AreSame(longReleaseAction, result, "Held past its own LongReleaseDelay with onLongRelease defined - same as execute() does.");
+        }
+
+        [TestMethod()]
+        public void GetInputAction_Button_ReturnsNullWhenActionIsNotConfigured()
+        {
+            var config = new InputConfigItem
+            {
+                button = new ButtonInputConfig
+                {
+                    onPress = new VariableInputAction()
+                }
+            };
+
+            var args = new InputEventArgs
+            {
+                InputType = DeviceType.Button,
+                Value = (int)MobiFlightButton.InputEvent.RELEASE
+            };
+
+            var result = config.GetInputAction(args);
+
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        [DataRow((int)MobiFlightEncoder.InputEvent.LEFT)]
+        [DataRow((int)MobiFlightEncoder.InputEvent.LEFT_FAST)]
+        [DataRow((int)MobiFlightEncoder.InputEvent.RIGHT)]
+        [DataRow((int)MobiFlightEncoder.InputEvent.RIGHT_FAST)]
+        public void GetInputAction_Encoder_ReturnsConfiguredAction(int inputEvent)
+        {
+            var leftAction = new VariableInputAction();
+            var leftFastAction = new VariableInputAction();
+            var rightAction = new VariableInputAction();
+            var rightFastAction = new VariableInputAction();
+
+            var config = new InputConfigItem
+            {
+                encoder = new EncoderInputConfig
+                {
+                    onLeft = leftAction,
+                    onLeftFast = leftFastAction,
+                    onRight = rightAction,
+                    onRightFast = rightFastAction
+                }
+            };
+
+            var args = new InputEventArgs
+            {
+                InputType = DeviceType.Encoder,
+                Value = inputEvent
+            };
+
+            var result = config.GetInputAction(args);
+
+            InputAction expected;
+
+            switch (inputEvent)
+            {
+                case (int)MobiFlightEncoder.InputEvent.LEFT:
+                    expected = leftAction;
+                    break;
+
+                case (int)MobiFlightEncoder.InputEvent.LEFT_FAST:
+                    expected = leftFastAction;
+                    break;
+
+                case (int)MobiFlightEncoder.InputEvent.RIGHT:
+                    expected = rightAction;
+                    break;
+
+                case (int)MobiFlightEncoder.InputEvent.RIGHT_FAST:
+                    expected = rightFastAction;
+                    break;
+
+                default:
+                    expected = null;
+                    break;
+            }
+
+
+            Assert.AreSame(expected, result);
+        }
+
+        [TestMethod]
+        [DataRow((int)MobiFlightEncoder.InputEvent.LEFT_FAST)]
+        [DataRow((int)MobiFlightEncoder.InputEvent.RIGHT_FAST)]
+        public void GetInputAction_Encoder_FallsBackToNormalActionWhenFastActionIsNotConfigured(
+    int inputEvent)
+        {
+            var leftAction = new VariableInputAction();
+            var rightAction = new VariableInputAction();
+
+            var config = new InputConfigItem
+            {
+                encoder = new EncoderInputConfig
+                {
+                    onLeft = leftAction,
+                    onRight = rightAction
+                }
+            };
+
+            var args = new InputEventArgs
+            {
+                InputType = DeviceType.Encoder,
+                Value = inputEvent
+            };
+
+            var result = config.GetInputAction(args);
+
+            var expected = inputEvent == (int)MobiFlightEncoder.InputEvent.LEFT_FAST
+                ? leftAction
+                : rightAction;
+
+            Assert.AreSame(expected, result);
+        }
+
+        [TestMethod]
+        [DataRow(-1)]
+        [DataRow(999)]
+        public void GetInputAction_Encoder_ReturnsNullForUnknownEvent(int inputEvent)
+        {
+            var config = new InputConfigItem
+            {
+                encoder = new EncoderInputConfig
+                {
+                    onLeft = new VariableInputAction(),
+                    onLeftFast = new VariableInputAction(),
+                    onRight = new VariableInputAction(),
+                    onRightFast = new VariableInputAction()
+                }
+            };
+
+            var args = new InputEventArgs
+            {
+                InputType = DeviceType.Encoder,
+                Value = inputEvent
+            };
+
+            var result = config.GetInputAction(args);
+
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        [DataRow(0)]
+        [DataRow(100)]
+        [DataRow(1023)]
+        public void GetInputAction_Analog_ReturnsOnChange(double value)
+        {
+            var action = new VariableInputAction();
+
+            var config = new InputConfigItem
+            {
+                analog = new AnalogInputConfig
+                {
+                    onChange = action
+                }
+            };
+
+            var args = new InputEventArgs
+            {
+                InputType = DeviceType.AnalogInput,
+                Value = value
+            };
+
+            var result = config.GetInputAction(args);
+
+            Assert.AreSame(action, result);
+        }
+
+        [TestMethod]
+        public void GetInputAction_Analog_ReturnsNullWhenActionIsNotConfigured()
+        {
+            var config = new InputConfigItem
+            {
+                analog = new AnalogInputConfig()
+            };
+
+            var args = new InputEventArgs
+            {
+                InputType = DeviceType.AnalogInput,
+                Value = 100
+            };
+
+            var result = config.GetInputAction(args);
+
+            Assert.IsNull(result);
+        }
+        #region CreateInputDevice() tests
+        [TestMethod()]
+        public void CreateInputDevice_Button_ReturnsButtonDevice()
+        {
+            var result = InputConfigItem.CreateInputDevice(InputConfigItem.TYPE_BUTTON, "Button 1");
+
+            Assert.IsInstanceOfType(result, typeof(MobiFlight.InputConfig.Button));
+            Assert.AreEqual("Button 1", result.Name);
+        }
+
+        [TestMethod()]
+        public void CreateInputDevice_Encoder_ReturnsEncoderDevice()
+        {
+            var result = InputConfigItem.CreateInputDevice(InputConfigItem.TYPE_ENCODER, "Encoder 1");
+
+            Assert.IsInstanceOfType(result, typeof(MobiFlight.InputConfig.Encoder));
+            Assert.AreEqual("Encoder 1", result.Name);
+        }
+
+        [TestMethod()]
+        public void CreateInputDevice_AnalogInput_ReturnsAnalogInputDevice()
+        {
+            var result = InputConfigItem.CreateInputDevice(InputConfigItem.TYPE_ANALOG, "Potentiometer 1");
+
+            Assert.IsInstanceOfType(result, typeof(MobiFlight.InputConfig.AnalogInput));
+            Assert.AreEqual("Potentiometer 1", result.Name);
+        }
+
+        [TestMethod()]
+        public void CreateInputDevice_InputShiftRegister_ReturnsInputShiftRegisterDeviceWithExtPin()
+        {
+            var result = InputConfigItem.CreateInputDevice(
+                            InputConfigItem.DEPRECATED_TYPE_INPUT_SHIFT_REGISTER,
+                            "Shifter 1",
+                            5
+                        ) as Button;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("Shifter 1:5", result.Name);
+        }
+
+        [TestMethod()]
+        public void CreateInputDevice_InputShiftRegister_NullConfig_UsesZeroExtPin()
+        {
+            var result = InputConfigItem.CreateInputDevice(InputConfigItem.DEPRECATED_TYPE_INPUT_SHIFT_REGISTER, "Shifter 1") as Button;
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod()]
+        public void CreateInputDevice_InputMultiplexer_ReturnsInputMultiplexerDeviceWithDataPin()
+        {
+            var result = InputConfigItem.CreateInputDevice(InputConfigItem.DEPRECATED_TYPE_INPUT_MULTIPLEXER, "Mux 1", 3) as Button;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("Mux 1:3", result.Name);
+        }
+
+        [TestMethod()]
+        public void CreateInputDevice_TypeNotSet_ReturnsNull()
+        {
+            var result = InputConfigItem.CreateInputDevice(InputConfigItem.TYPE_NOTSET, "Something");
+
+            Assert.IsNull(result);
+        }
+
+        #endregion
+    }
+}

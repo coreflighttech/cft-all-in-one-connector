@@ -1,0 +1,125 @@
+{
+  "definitions": {},
+  "$schema": "https://json-schema.org/draft/2019-09/schema#",
+  "$id": "https://mobiflight.com/hid.schema.json",
+  "title": "Root",
+  "type": "object",
+  "required": [ "InstanceName" ],
+  "dependentRequired": {
+    "Outputs": [ "VendorId", "ProductId" ]
+  },
+  "properties": {
+    "InstanceName": {
+      "$id": "#root/InstanceName",
+      "title": "InstanceName",
+      "type": "string",
+      "description": "Instance name for the device. Required. This is used to match the definition with a connected device."
+    },
+    "Inputs": {
+      "$id": "#root/Inputs",
+      "title": "Inputs",
+      "description": "List of inputs supported by the device. Optional.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$id": "#root/Inputs/items",
+        "title": "Items",
+        "type": "object",
+        "required": [ "Id", "Label", "Type" ],
+        "properties": {
+          "Id": {
+            "$id": "#root/Inputs/items/Id",
+            "title": "Id",
+            "description": "The input's unique identifier on the joystick. Required.",
+            "type": "integer"
+          },
+          "Label": {
+            "$id": "#root/Inputs/items/Label",
+            "title": "Label",
+            "description": "Friendly label for the input. Required.",
+            "type": "string"
+          },
+          "Type": {
+            "$id": "#root/Inputs/items/Type",
+            "title": "Type",
+            "description": "The input's type. Supported values: Button, Axis.",
+            "type": "string",
+            "enum": [ "Button", "Axis" ]
+          }
+        }
+      }
+    },
+    "Outputs": {
+      "$id": "#root/Outputs",
+      "title": "Outputs",
+      "description": "List of outputs supported by the device. Optional.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$id": "#root/Outputs/items",
+        "title": "Items",
+        "type": "object",
+        "required": [ "Id", "Label", "Byte" ],
+        "properties": {
+          "Type": {
+            "$id": "#root/Outputs/items/Type",
+            "title": "Type",
+            "description": "The output's type. Supported values: Output, Display. Defaults to 'Output' if not specified.",
+            "type": "string",
+            "enum": [ "Output", "LcdDisplay" ]
+          },
+          "Id": {
+            "$id": "#root/Outputs/items/Id",
+            "title": "Id",
+            "description": "The unique identifier for the output. Required.",
+            "type": "string"
+          },
+          "Label": {
+            "$id": "#root/Outputs/items/Label",
+            "title": "Label",
+            "description": "Label for the output. Required.",
+            "type": "string"
+          },
+          "Byte": {
+            "$id": "#root/Outputs/items/Byte",
+            "title": "Byte",
+            "description": "Byte location of the output. Required for Output type, optional for Display type.",
+            "type": "number"
+          },
+          "Bit": {
+            "$id": "#root/Outputs/items/Bit",
+            "title": "Bit",
+            "description": "Bit location within the byte of the output. Required for Output type, optional for Display type.",
+            "type": "number"
+          },
+          "Cols": {
+            "$id": "#root/Outputs/items/Cols",
+            "title": "Cols",
+            "description": "Number of columns for the output. Required for Display type.",
+            "type": "number"
+          },
+          "Lines": {
+            "$id": "#root/Outputs/items/Lines",
+            "title": "Lines",
+            "description": "Number of lines for the output. Required for Display type.",
+            "type": "number"
+          }
+        }
+      },
+      "ProductId": {
+        "$id": "#Root/VendorId",
+        "title": "VendorId",
+        "type": "string",
+        "pattern": "^0x[0-9a-fA-F]+$",
+        "description": "The device's USB VendorId as a hexadcimal, e.g. `0x123A`. Required if Outputs are provided."
+      },
+      "VendorId": {
+        "$id": "#Root/ProductId",
+        "title": "ProductId",
+        "type": "string",
+        "pattern": "^0x[0-9a-fA-F]+$",
+        "description": "The device's USB ProductId as a hexadecimal, e.g. `0x234A`. Required if Outputs are provided."
+      }
+    }
+  }
+}

@@ -1,0 +1,939 @@
+{
+    "$schema": "./mfboard.schema.json",
+    "AvrDudeSettings": {
+      "Device": "atmega2560",
+      "BaudRates": [ "115200" ],
+      "Programmer": "wiring",
+      "Timeout": 35000
+    },
+    "Connection": {
+      "ConnectionDelay": 1250,
+      "ExtraConnectionRetry": false,
+      "ForceResetOnFirmwareUpdate": false,
+      "DelayAfterFirmwareUpdate": 0,
+      "DtrEnable": true,
+      "MessageSize": 90,
+      "EEPROMSize": 2016
+    },
+    "HardwareIds": [
+      "^VID_2341&PID_0010",
+      "^VID_2341&PID_0042",
+      "^VID_8087&PID_0024",
+      "^VID_1A86&PID_7523",
+      "^VID_2A03&PID_0042",
+      "^VID_0403&PID_6001",
+      "^VID_0403\\+PID_6001\\+.+",
+      "^VID_2A03&PID_0010",
+      "^VID_2341&PID_0210",
+      "^VID_2341&PID_0242",
+      "^VID_10C4&PID_EA60",
+      "^VID_2341&PID_0044",
+      "^VID_3343&PID_0042",
+      "^VID_04D9&PID_B534"
+    ],
+    "Info": {
+      "CanInstallFirmware": true,
+      "CanResetBoard": true,
+      "DelayAfterFirmwareUpdate": 0,
+      "FirmwareBaseName": "miniCOCKPIT_miniFCU_mega",
+      "FirmwareExtension": "hex",
+      "LatestFirmwareVersion": "1.0.5",
+      "FriendlyName": "miniCOCKPIT miniFCU",
+      "MobiFlightType": "miniCOCKPIT miniFCU mega",
+      "ResetFirmwareFile": "reset.miniFCU_20251113.ino.hex",
+      "CustomDeviceTypes": [
+        "miniCOCKPIT_miniFCU",
+        "miniCOCKPIT_miniEFIS",
+        "miniCOCKPIT_miniOVHD"
+      ],
+      "Community": {
+        "Project": "miniCOCKPIT",
+        "Website": "https://minicockpit.com/",
+        "Docs": "https://shop.minicockpit.com/a/help",
+        "Support": "mailto:hello@minicockpit.com"
+      }
+    },
+    "ModuleLimits": {
+      "MaxAnalogInputs": 16,
+      "MaxInputShifters": 4,
+      "MaxButtons": 133,
+      "MaxEncoders": 20,
+      "MaxLcdI2C": 2,
+      "MaxLedSegments": 4,
+      "MaxOutputs": 40,
+      "MaxServos": 10,
+      "MaxShifters": 4,
+      "MaxSteppers": 10,
+      "MaxInputMultiplexer": 4,
+      "MaxCustomDevices": 5
+    },
+    "Pins": [
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 2
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 3
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 4
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 5
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 6
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 7
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 8
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 9
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 10
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 11
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 12
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 13
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 14
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 15
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 16
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 17
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 18
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 19
+      },
+      {
+        "isAnalog": false,
+        "isPWM": false,
+        "isI2C": true,
+        "Pin": 20
+      },
+      {
+        "isAnalog": false,
+        "isPWM": false,
+        "isI2C": true,
+        "Pin": 21
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 22
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 23
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 24
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 25
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 26
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 27
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 28
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 29
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 30
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 31
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 32
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 33
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 34
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 35
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 36
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 37
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 38
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 39
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 40
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 41
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 42
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 43
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 44
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 45
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": true,
+        "Pin": 46
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 47
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 48
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 49
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 50
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 51
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 52
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 53
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 54,
+        "Name": "A0"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 55,
+        "Name": "A1"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 56,
+        "Name": "A2"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 57,
+        "Name": "A3"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 58,
+        "Name": "A4"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 59,
+        "Name": "A5"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 60,
+        "Name": "A6"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 61,
+        "Name": "A7"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 62,
+        "Name": "A8"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 63,
+        "Name": "A9"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 64,
+        "Name": "A10"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 65,
+        "Name": "A11"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 66,
+        "Name": "A12"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 67,
+        "Name": "A13"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 68,
+        "Name": "A14"
+      },
+      {
+        "isAnalog": true,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 69,
+        "Name": "A15"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 70,
+        "Name": "EFIS_FD"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 71,
+        "Name": "EFIS_LS"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 72,
+        "Name": "EFIS_1_ADF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 73,
+        "Name": "EFIS_1_NULL"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 74,
+        "Name": "EFIS_1_VOR"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 75,
+        "Name": "EFIS_2_ADF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 76,
+        "Name": "EFIS_2_NULL"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 77,
+        "Name": "EFIS_2_VOR"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 78,
+        "Name": "EFIS_ROSE_LS"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 79,
+        "Name": "EFIS_ROSE_VOR"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 80,
+        "Name": "EFIS_ROSE_NAV"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 81,
+        "Name": "EFIS_ROSE_ARC"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 82,
+        "Name": "EFIS_ROSE_PLAN"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 83,
+        "Name": "EFIS_ROSE_HIDDEN"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 84,
+        "Name": "EFIS_RANGE_10"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 85,
+        "Name": "EFIS_RANGE_20"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 86,
+        "Name": "EFIS_RANGE_40"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 87,
+        "Name": "EFIS_RANGE_80"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 88,
+        "Name": "EFIS_RANGE_160"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 89,
+        "Name": "EFIS_RANGE_320"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 90,
+        "Name": "EFIS_CSTR"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 91,
+        "Name": "EFIS_WPT"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 92,
+        "Name": "EFIS_VORD"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 93,
+        "Name": "EFIS_NDB"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 94,
+        "Name": "EFIS_ARPT"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 95,
+        "Name": "EFIS_PULL"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 96,
+        "Name": "EFIS_PUSH"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 97,
+        "Name": "EFIS_inHg"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 98,
+        "Name": "EFIS_hPa"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 99,
+        "Name": "EFIS_CHRONO"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 100,
+        "Name": "OVHD_FLAP3"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 101,
+        "Name": "OVHD_AI_WING"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 102,
+        "Name": "OVHD_AI_ENG"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 103,
+        "Name": "OVHD_PB_WIN_HEAT"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 104,
+        "Name": "OVHD_APU_START"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 105,
+        "Name": "OVHD_APU_MASTER"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 106,
+        "Name": "OVHD_EXT_PWR"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 107,
+        "Name": "OVHD_APU_BLEED"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 108,
+        "Name": "OVHD_CALL"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 109,
+        "Name": "OVHD_STROBE_ON"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 110,
+        "Name": "OVHD_STROBE_AUTO"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 111,
+        "Name": "OVHD_STROBE_OFF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 112,
+        "Name": "OVHD_BEACON_ON"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 113,
+        "Name": "OVHD_BEACON_OFF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 114,
+        "Name": "OVHD_NAV_LOGO_2"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 115,
+        "Name": "OVHD_NAV_LOGO_1"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 116,
+        "Name": "OVHD_NAV_LOGO_OFF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 117,
+        "Name": "OVHD_RWY_RETURN_OFF_ON"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 118,
+        "Name": "OVHD_RWY_RETURN_OFF_OFF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 119,
+        "Name": "OVHD_LAND_ON"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 120,
+        "Name": "OVHD_LAND_OFF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 121,
+        "Name": "OVHD_LAND_RETRACT"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 122,
+        "Name": "OVHD_NOSE_TO"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 123,
+        "Name": "OVHD_NOSE_TAXI"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 124,
+        "Name": "OVHD_NOSE_OFF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 125,
+        "Name": "OVHD_DOME_BRT"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 126,
+        "Name": "OVHD_DOME_DIM"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 127,
+        "Name": "OVHD_DOME_OFF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 128,
+        "Name": "OVHD_BELTS_ON"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 129,
+        "Name": "OVHD_BELTS_OFF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 130,
+        "Name": "OVHD_WIPER_OFF"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 131,
+        "Name": "OVHD_WIPER_SLOW"
+      },
+      {
+        "isAnalog": false,
+        "isI2C": false,
+        "isPWM": false,
+        "Pin": 132,
+        "Name": "OVHD_WIPER_FAST"
+      }
+
+    ]
+  }
+  

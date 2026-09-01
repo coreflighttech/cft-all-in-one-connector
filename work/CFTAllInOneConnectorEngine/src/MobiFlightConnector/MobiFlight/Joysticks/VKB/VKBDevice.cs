@@ -1,0 +1,253 @@
+﻿using HidSharp;
+using System;
+using System.Collections.Generic;
+
+namespace MobiFlight.Joysticks.VKB
+{
+    internal class VKBDevice : Joystick
+    {
+        public const int VKB_VENDOR_ID = 0x231D;
+        const int ENCODER_MISSED_MESSAGE_THRESHOLD = 5; // How many missed encoder messages are allowed before we need to log them - chosen arbitrarily
+        private readonly new VKBLedContainer Lights = new VKBLedContainer();
+        private readonly HidReportReceiver Receiver = new HidReportReceiver();
+        private readonly SortedList<byte, VKBEncoder> Encoders = new SortedList<byte, VKBEncoder>();
+        int lastSeqNo = -1;
+
+        public VKBDevice(SharpDX.DirectInput.Joystick joystick, JoystickDefinition definition) : base(joystick, definition)
+        {
+            if (Device == null)
+            {
+                Device = GetMatchingHidDevice(joystick);
+            }
+        }
+
+        public override void Connect(IntPtr handle)
+        {
+            base.Connect(handle);
+            if (Device == null)
+            {
+                return;
+            }
+            if (Stream == null)
+            {
+                Stream = Device.Open();
+            }
+
+            if (!Receiver.IsRunning)
+            {
+                // The descriptor Windows reconstructs for this device is altered and misses the
+                // encoder monitoring report (0x08, 64 bytes incl. report ID), so don't trust the
+                // reported max input length blindly.
+                int bufferSize = Math.Max(64, Device.GetMaxInputReportLength());
+                Receiver.Start(Stream, bufferSize, OnReportReceived, OnReadError, "VKB-HID-Reader");
+            }
+        }
+
+        protected override void SendData(byte[] data)
+        {
+            // VKBLedContainer has its own handling that replaces RequiresOutputUpdate, so we just send.
+            // Don't try and send data if no outputs are defined.
+            if (Definition?.Outputs == null || Definition?.Outputs.Count == 0)
+            {
+                return;
+            }
+            Stream?.SetFeature(data);
+
+        }
+
+        protected override void EnumerateDevices()
+        {
+            base.EnumerateDevices();
+            var EncoderDecList = new SortedList<byte, JoystickDevice>();
+            var EncoderIncList = new SortedList<byte, JoystickDevice>();
+            if (Definition == null || Definition.Inputs == null)
+            {
+                return;
+            }
+
+            foreach (var input in Definition.Inputs)
+            {
+                // The 1xxx range is limited to encoders. They are also not fed from DirectInput.
+                // Format for encoder virtual buttons is 1IID, where II is a two-digit ID and D is the direction.
+                if (input.Id >= 1000 && input.Id < 2000 && input.Type == JoystickDeviceType.Button)
+                {
+                    byte encoderIndex = GetEncoderIndex(input);
+                    VKBEncoder.EncoderAction encoderAction = GetEncoderAction(input);
+                    // Store the encoders temporarily, for a valid encoder definition we need both directions.
+                    // A correct definition should always have both, but a user may have edited it for a customized controller.
+                    if (encoderAction == VKBEncoder.EncoderAction.DEC)
+                    {
+                        EncoderDecList.Add(encoderIndex, new JoystickDevice { Name = $"Button {1000 + 10 * encoderIndex + (int)encoderAction}", Label = input.Label, Type = DeviceType.Button, JoystickDeviceType = input.Type });
+                    }
+                    if (encoderAction == VKBEncoder.EncoderAction.INC)
+                    {
+                        EncoderIncList.Add(encoderIndex, new JoystickDevice { Name = $"Button {1000 + 10 * encoderIndex + (int)encoderAction}", Label = input.Label, Type = DeviceType.Button, JoystickDeviceType = input.Type });
+                    }
+                    // Rename the original buttons to keep indexing intact and ensure compatibility with devices not configured to use encoder channels.
+                    Buttons.FindAll(but => but.Label == input.Label).ForEach(but => but.Label += " (Legacy DirectInput)");
+                }
+            }
+            foreach (var encdec in EncoderDecList)
+            {
+                if (EncoderIncList.ContainsKey(encdec.Key))
+                {
+                    Encoders.Add(encdec.Key, new VKBEncoder(EncoderIncList[encdec.Key], encdec.Value)); // If both increment and decrement were in the definition, we create an encoder object from the definition file
+                    Buttons.Add(Encoders[encdec.Key].DeviceDec); // And register their virtual buttons in the joystick's button list.
+                    Buttons.Add(Encoders[encdec.Key].DeviceInc);
+                }
+            }
+        }
+
+        private static byte GetEncoderIndex(JoystickInput input)
+        {
+            return (byte)((input.Id - 1000) / 10);
+        }
+
+        private static VKBEncoder.EncoderAction GetEncoderAction(JoystickInput input)
+        {
+            return (VKBEncoder.EncoderAction)(input.Id % 10);
+        }
+
+        protected override void EnumerateOutputDevices()
+        {
+            Definition?.Outputs?.ForEach(output => Lights.AddChannel(output));
+            base.EnumerateOutputDevices();
+        }
+
+        public override void SetOutputDeviceState(string name, byte state)
+        {
+            Lights.UpdateState(name, state);
+        }
+
+        public override void UpdateOutputDeviceStates()
+        {
+            var data = Lights.CreateMessage();
+            // Only send message if there are non-zero LEDs to be updated
+            if (data[7] == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                SendData(data);
+            }
+            catch (System.IO.IOException)
+            {
+                base.OnDeviceRemoved();
+            }
+        }
+
+        private void OnReportReceived(HidReport inputReport)
+        {
+            ProcessInputReport(inputReport);
+        }
+
+        protected void ProcessInputReport(HidReport inputReport)
+        {
+            if (inputReport.Buffer.Length < 4)
+            {
+                return;
+            }
+
+            if (inputReport.ReportId != 0x08) // 0x08 = Monitoring channel / virtual bus
+            {
+                return;
+            }
+
+            if (inputReport.Buffer[1] != 0x13) // 0x13 = Encoder status
+            {
+                return;
+            }
+
+            // The encoder parser works on the raw report including the report ID byte.
+            ParseEncoderReport(inputReport.Buffer);
+        }
+
+        private void OnReadError(Exception exception)
+        {
+            // Axes and buttons keep working through DirectInput; only the encoder channel
+            // is lost. Device removal itself is detected by the DirectInput polling.
+            Log.Instance.log($"VKB encoder channel read failed: {exception.Message}", LogSeverity.Error);
+            Stream?.Close();
+            Stream = null;
+        }
+
+        private void ParseEncoderReport(byte[] Report)
+        {
+            byte sequenceNo = Report[2];
+            var hasPredecessor = lastSeqNo != -1;
+            var seqNoIncrement = (sequenceNo - lastSeqNo) & 0xFF;
+            // Sequence number should increment once per report, but if the encoder is spun fast some reports can be missed.
+            // A few missed messages are not an issue (positions in message are absolute) and may happen due to bus/system load, but large clusters should be taken into account.
+            var manyMessagesMissed = seqNoIncrement > ENCODER_MISSED_MESSAGE_THRESHOLD;
+            if (hasPredecessor && manyMessagesMissed) // Only log large skips, do not log first message.
+            {
+                Log.Instance.log($"Some VKB encoder messages may have been missed ({lastSeqNo}->{sequenceNo})", LogSeverity.Debug);
+            }
+            lastSeqNo = sequenceNo;
+            byte encoderCount = Report[3];
+            int maxEncoders = (Report.Length - 4) / 2;
+            // It is possible to define more encoders than the report can handle. In this case, we limit ourselves to the encoders actually present in the report.
+            if (encoderCount > maxEncoders)
+            {
+                Log.Instance.log($"Log message reports {encoderCount} encoders, but only has space for {maxEncoders}. Some encoders were ignored.", LogSeverity.Warn);
+                encoderCount = (byte)maxEncoders;
+                // Should not occur in most real-life scenarios
+            }
+            var events = new List<InputEventArgs>();
+            for (byte i = 0; i < encoderCount; i++)
+            {
+                ushort newPos = (ushort)(Report[5 + 2 * i] << 8 | Report[4 + 2 * i]);
+                // Add encoders that were not part of definition when we first receive a message with them.
+                if (!Encoders.ContainsKey(i))
+                {
+                    Encoders.Add(i, new VKBEncoder(i, newPos));
+                    Buttons.Add(Encoders[i].DeviceDec);
+                    Buttons.Add(Encoders[i].DeviceInc);
+                }
+                else
+                {
+                    events.AddRange(Encoders[i].Update(newPos));
+                }
+            }
+            foreach (InputEventArgs e in events)
+            {
+                // Process the encoder events created by the encoder object.
+                e.Controller = new Base.Controller()
+                {
+                    Name = Name,
+                    Serial = Serial
+                };
+
+                TriggerButtonPressed(this, e);
+            }
+        }
+
+        public override void Shutdown()
+        {
+            Receiver.Stop();
+            if (Stream != null)
+            {
+                Stream.Close();
+                Stream = null;
+            }
+            base.Shutdown();
+        }
+
+        public static HidDevice GetMatchingHidDevice(SharpDX.DirectInput.Joystick joystick)
+        {
+            // Get the HID device using the device path. We are not relying on PID alone because multiple devices may have the same PID under certain circumstances, e.g. identical module combos.
+            var DevList = DeviceList.Local.GetHidDevices(joystick.Properties.VendorId, joystick.Properties.ProductId);
+            foreach (HidDevice dev in DevList)
+            {
+                if (dev.DevicePath == joystick.Properties.InterfacePath)
+                {
+                    return dev;
+                }
+            }
+
+            return null;
+        }
+    }
+}

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>CFT All-in-One Connector</AssemblyName>
+    <Product>CFT All-in-One Connector</Product>
+    <Title>CFT All-in-One Connector</Title>
+    <Description>Desktop software that connects Core Flight Tech products to the active flight simulator through automatic device and profile handling.</Description>
+    <Company>Core Flight Tech</Company>
+    <Copyright>Copyright © 2026 Core Flight Tech</Copyright>
+    <Version>1.0.0</Version>
+    <RootNamespace>CFTAllInOneConnectorApp</RootNamespace>
+  </PropertyGroup>
+</Project>
