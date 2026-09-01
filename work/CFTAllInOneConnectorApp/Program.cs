@@ -54,6 +54,7 @@ internal sealed class MainForm : Form
     public MainForm()
     {
         Text = "CFT All-in-One Connector";
+        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         ClientSize = CollapsedSize;
         StartPosition = FormStartPosition.Manual;
         var screen = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1200, 800);

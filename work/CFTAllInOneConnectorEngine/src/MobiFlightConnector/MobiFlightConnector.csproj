@@ -17,7 +17,7 @@
 		<Product>CFT All-in-One Connector</Product>
 		<Copyright>Copyright Sebastian Moebius 2014 - 2026</Copyright>
 		<Company>Core Flight Tech</Company>
-		<ApplicationIcon>mobiflight.ico</ApplicationIcon>
+		<ApplicationIcon>..\..\cft-all-in-one.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug'">

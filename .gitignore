@@ -31,3 +31,4 @@ work/CFTAllInOneConnectorEngine/Python/RuntimeAndPackages.*.zip
 # Local packages
 *.zip
 *.7z
+/release/

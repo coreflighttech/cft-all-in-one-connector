@@ -13,5 +13,6 @@
     <Copyright>Copyright © 2026 Core Flight Tech</Copyright>
     <Version>1.0.0</Version>
     <RootNamespace>CFTAllInOneConnectorApp</RootNamespace>
+    <ApplicationIcon>Assets\cft-all-in-one.ico</ApplicationIcon>
   </PropertyGroup>
 </Project>
