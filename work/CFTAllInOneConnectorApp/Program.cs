@@ -26,6 +26,9 @@ internal sealed class MainForm : Form
     private readonly Label devicesValue = StatusValue("Not found");
     private readonly Label simulatorValue = StatusValue("Not found");
     private readonly Label aircraftValue = StatusValue("No aircraft detected");
+    private Panel devicesCard = null!;
+    private Panel simulatorCard = null!;
+    private Panel aircraftCard = null!;
     private readonly System.Windows.Forms.Timer monitor = new() { Interval = 500 };
     private readonly CheckBox debugToggle = new();
     private readonly Panel debugPanel = new();
@@ -47,6 +50,7 @@ internal sealed class MainForm : Form
 
     private static readonly Size CollapsedSize = new(790, 300);
     private const int DebugPanelExtraHeight = 290;
+    private int deviceLayoutExtraHeight;
     private bool deviceDisconnectBeingHandled;
     private string? lastConnectedModule;
     private string? trackedDevicePort;
@@ -74,12 +78,12 @@ internal sealed class MainForm : Form
         action.BackColor = Color.FromArgb(37, 99, 235); action.ForeColor = Color.White; action.Cursor = Cursors.Hand; action.Size = new Size(384, 78); action.Location = new Point(28, 155); action.Anchor = AnchorStyles.Top | AnchorStyles.Left;
         action.Click += async (_, _) => await ToggleConnection();
         Controls.Add(dot); Controls.Add(state); Controls.Add(action);
-        AddStatusCard("CONNECTED DEVICES", devicesValue, 455, 25);
+        devicesCard = AddStatusCard("CONNECTED DEVICES", devicesValue, 455, 25);
         devicesValue.AutoEllipsis = false;
         devicesValue.Font = new Font("Segoe UI Semibold", 9.5F);
         devicesValue.Height = 36;
-        AddStatusCard("SIM STATUS", simulatorValue, 455, 113);
-        AddStatusCard("AIRCRAFT", aircraftValue, 455, 201);
+        simulatorCard = AddStatusCard("SIM STATUS", simulatorValue, 455, 113);
+        aircraftCard = AddStatusCard("AIRCRAFT", aircraftValue, 455, 201);
         BuildDebugPanel();
         monitor.Tick += (_, _) => { CheckProcess(); ReadMobiFlightStatus(); CheckWaitingDevice(); CheckWaitingSimulator(); UpdateDebugLog(); }; monitor.Start();
         Shown += async (_, _) => await StartOrWaitForDevice();
@@ -92,26 +96,48 @@ internal sealed class MainForm : Form
         Font = new Font("Segoe UI Semibold", 11F), ForeColor = Color.FromArgb(226, 232, 240)
     };
 
-    private void AddStatusCard(string caption, Label value, int x, int y)
+    private Panel AddStatusCard(string caption, Label value, int x, int y)
     {
         var card = new Panel { Location = new Point(x, y), Size = new Size(305, 73), BackColor = Color.FromArgb(30, 41, 59), Anchor = AnchorStyles.Top | AnchorStyles.Right };
         card.Controls.Add(new Label { Text = caption, Location = new Point(15, 10), AutoSize = true, Font = new Font("Segoe UI Semibold", 8F, FontStyle.Bold), ForeColor = Color.FromArgb(96, 165, 250) });
         value.Location = new Point(15, 34); card.Controls.Add(value); Controls.Add(card);
+        return card;
+    }
+
+    private int DebugPanelTop => 310 + deviceLayoutExtraHeight;
+
+    private void UpdateConnectedDevicesLayout(int deviceCount)
+    {
+        var newExtraHeight = Math.Max(0, deviceCount - 2) * 18;
+        if (newExtraHeight == deviceLayoutExtraHeight) return;
+
+        var heightChange = newExtraHeight - deviceLayoutExtraHeight;
+        deviceLayoutExtraHeight = newExtraHeight;
+        devicesValue.Height = 36 + newExtraHeight;
+        devicesCard.Height = 73 + newExtraHeight;
+        simulatorCard.Top = 113 + newExtraHeight;
+        aircraftCard.Top = 201 + newExtraHeight;
+        debugToggle.Top = 272 + newExtraHeight;
+
+        var requiredHeight = CollapsedSize.Height + newExtraHeight + (debugToggle.Checked ? DebugPanelExtraHeight : 0);
+        ClientSize = new Size(ClientSize.Width, Math.Max(requiredHeight, ClientSize.Height + heightChange));
+        MinimumSize = new Size(830, 370 + newExtraHeight);
+        debugPanel.SetBounds(18, DebugPanelTop, ClientSize.Width - 36, Math.Max(80, ClientSize.Height - DebugPanelTop - 20));
     }
 
     private void BuildDebugPanel()
     {
         debugToggle.Text = "Debug";
         debugToggle.AutoSize = true;
-        debugToggle.Location = new Point(24, 272);
+        debugToggle.Location = new Point(24, 272 + deviceLayoutExtraHeight);
         debugToggle.ForeColor = Color.FromArgb(148, 163, 184);
         debugToggle.CheckedChanged += (_, _) =>
         {
             if (debugToggle.Checked)
             {
                 debugPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-                ClientSize = new Size(ClientSize.Width, Math.Max(CollapsedSize.Height + DebugPanelExtraHeight, ClientSize.Height + DebugPanelExtraHeight));
-                debugPanel.SetBounds(18, 310, ClientSize.Width - 36, ClientSize.Height - 330);
+                ClientSize = new Size(ClientSize.Width, Math.Max(CollapsedSize.Height + deviceLayoutExtraHeight + DebugPanelExtraHeight, ClientSize.Height + DebugPanelExtraHeight));
+                debugPanel.SetBounds(18, DebugPanelTop, ClientSize.Width - 36, ClientSize.Height - DebugPanelTop - 20);
                 debugPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
                 debugPanel.Visible = true;
                 UpdateDebugLog();
@@ -120,12 +146,12 @@ internal sealed class MainForm : Form
             {
                 debugPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
                 debugPanel.Visible = false;
-                ClientSize = new Size(ClientSize.Width, Math.Max(CollapsedSize.Height, ClientSize.Height - DebugPanelExtraHeight));
+                ClientSize = new Size(ClientSize.Width, Math.Max(CollapsedSize.Height + deviceLayoutExtraHeight, ClientSize.Height - DebugPanelExtraHeight));
             }
         };
         Controls.Add(debugToggle);
 
-        debugPanel.Location = new Point(18, 310);
+        debugPanel.Location = new Point(18, DebugPanelTop);
         debugPanel.Size = new Size(754, 260);
         debugPanel.BackColor = Color.White;
         debugPanel.Visible = false;
@@ -619,6 +645,7 @@ internal sealed class MainForm : Form
                 : candidatePorts.Count > 0
                     ? string.Join(Environment.NewLine, candidatePorts.OrderBy(x => x).Select(x => $"Core Flight Tech device ({x})"))
                     : "Not found";
+            UpdateConnectedDevicesLayout(connectedModuleNames.Length > 0 ? connectedModuleNames.Length : candidatePorts.Count);
 
             if (connectedModuleNames.Length > 0)
             {
@@ -726,6 +753,7 @@ internal sealed class MainForm : Form
 
     private void ResetDetails()
     {
+        UpdateConnectedDevicesLayout(0);
         devicesValue.Text = "Not found"; simulatorValue.Text = "Not found"; aircraftValue.Text = "No aircraft detected";
     }
     private void SetBusy(string text) { state.Text = text; state.ForeColor = dot.ForeColor = Color.FromArgb(250, 204, 21); }
