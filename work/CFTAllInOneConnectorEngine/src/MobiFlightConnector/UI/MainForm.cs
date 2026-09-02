@@ -2508,6 +2508,24 @@ namespace MobiFlight.UI
         {
             if (execManager.IsStarted()) return;
 
+            // The compact connector can receive CONNECT immediately after the
+            // initial serial scan. At that point the profile may already have
+            // been loaded while the module cache was still being finalized.
+            // Re-run MobiFlight's native auto-binding against the live cache so
+            // a profile serial is replaced by the serial of the attached device.
+            if (coreFlightHiddenMode && execManager.Project != null)
+            {
+                var bindings = ControllerBindingService.PerformAutoBinding(execManager.Project);
+                foreach (var binding in bindings)
+                {
+                    var original = SerialNumber.BuildFullSerial(binding.OriginalController);
+                    var bound = binding.BoundController == null
+                        ? "not found"
+                        : SerialNumber.BuildFullSerial(binding.BoundController);
+                    Log.Instance.log($"CoreFlightTech auto-bind: {original} => {bound} ({binding.Status}).", LogSeverity.Info);
+                }
+            }
+
             execManager.Start();
         } //buttonToggleStart_Click()
 
