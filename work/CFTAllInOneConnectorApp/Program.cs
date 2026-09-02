@@ -75,6 +75,9 @@ internal sealed class MainForm : Form
         action.Click += async (_, _) => await ToggleConnection();
         Controls.Add(dot); Controls.Add(state); Controls.Add(action);
         AddStatusCard("CONNECTED DEVICES", devicesValue, 455, 25);
+        devicesValue.AutoEllipsis = false;
+        devicesValue.Font = new Font("Segoe UI Semibold", 9.5F);
+        devicesValue.Height = 36;
         AddStatusCard("SIM STATUS", simulatorValue, 455, 113);
         AddStatusCard("AIRCRAFT", aircraftValue, 455, 201);
         BuildDebugPanel();
@@ -582,11 +585,12 @@ internal sealed class MainForm : Form
             if (!File.Exists(EngineLog)) return;
             var lines = File.ReadLines(EngineLog).TakeLast(500).ToArray();
             var ports = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var acceptedPorts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var acceptedDevices = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var line in lines)
             {
-                var acceptedMatch = Regex.Match(line, @"Dedicated mode: accepted '.+?' .* on (COM\d+)", RegexOptions.IgnoreCase);
-                if (acceptedMatch.Success) acceptedPorts.Add(acceptedMatch.Groups[1].Value);
+                var acceptedMatch = Regex.Match(line, @"Dedicated mode: accepted '(.+?)'.*? on (COM\d+)", RegexOptions.IgnoreCase);
+                if (acceptedMatch.Success)
+                    acceptedDevices[acceptedMatch.Groups[2].Value] = acceptedMatch.Groups[1].Value.Trim();
                 var connectedMatch = Regex.Match(line, @"Connected to .+? at (COM\d+) of type (.+?) \(", RegexOptions.IgnoreCase);
                 if (connectedMatch.Success)
                 {
@@ -594,19 +598,26 @@ internal sealed class MainForm : Form
                     continue;
                 }
                 var removedMatch = Regex.Match(line, @"Port disappeared:\s*(COM\d+)", RegexOptions.IgnoreCase);
-                if (removedMatch.Success) ports.Remove(removedMatch.Groups[1].Value);
+                if (removedMatch.Success)
+                {
+                    ports.Remove(removedMatch.Groups[1].Value);
+                    acceptedDevices.Remove(removedMatch.Groups[1].Value);
+                }
             }
 
             var presentPorts = GetPresentSerialPorts();
             foreach (var port in ports.Keys.Where(x => !presentPorts.Contains(x)).ToArray()) ports.Remove(port);
-            foreach (var port in ports.Keys.Where(x => !acceptedPorts.Contains(x)).ToArray()) ports.Remove(port);
+            foreach (var port in ports.Keys.Where(x => !acceptedDevices.ContainsKey(x)).ToArray()) ports.Remove(port);
 
             var candidatePorts = GetCoreFlightTechCandidatePorts();
-            var connectedModuleNames = ports.Select(x => $"{FriendlyDeviceName(x.Value)} ({x.Key})").ToArray();
+            var connectedModuleNames = ports
+                .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(x => $"{acceptedDevices.GetValueOrDefault(x.Key, FriendlyDeviceName(x.Value))} ({x.Key})")
+                .ToArray();
             devicesValue.Text = connectedModuleNames.Length > 0
-                ? string.Join(", ", connectedModuleNames)
+                ? string.Join(Environment.NewLine, connectedModuleNames)
                 : candidatePorts.Count > 0
-                    ? string.Join(", ", candidatePorts.Select(x => $"Core Flight Tech device ({x})"))
+                    ? string.Join(Environment.NewLine, candidatePorts.OrderBy(x => x).Select(x => $"Core Flight Tech device ({x})"))
                     : "Not found";
 
             if (connectedModuleNames.Length > 0)
